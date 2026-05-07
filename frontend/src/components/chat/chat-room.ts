@@ -38,6 +38,7 @@ import "./chat-message-item";
 import "./chat-room-composer";
 import "./chat-voice-bar";
 import "./chat-active-call";
+import "./chat-image-preview";
 
 @customElement("chat-room")
 export class ChatRoom extends LitElement {
@@ -65,6 +66,7 @@ export class ChatRoom extends LitElement {
   
   @state() private _isMuted = false;
 
+  @state() private _previewImageUrl: string | null = null;
   @state() private _typingUsers = new Set<string>();
   private typingTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
@@ -360,6 +362,14 @@ export class ChatRoom extends LitElement {
     this.hasUnseenMessages = false;
   }
 
+  private handleImagePreview(e: CustomEvent<{ url: string }>) {
+    this._previewImageUrl = e.detail.url;
+  }
+
+  private closePreview() {
+    this._previewImageUrl = null;
+  }
+
   private handleMessagesScroll() {
     if (this.isAutoScrolling) return;
     if (this.isMessagesNearBottom() && this.hasUnseenMessages) {
@@ -601,7 +611,9 @@ export class ChatRoom extends LitElement {
           `
         ) : nothing}
 
-        <div class="chat-room__messages" @scroll=${this.handleMessagesScroll}
+        <div class="chat-room__messages" 
+             @scroll=${this.handleMessagesScroll}
+             @image-preview=${this.handleImagePreview}
              style="${(this._voiceState === 'active' || this._voiceState === 'calling') && this._viewingActiveCall ? 'display: none;' : ''}">
           ${this.isLoadingHistory
             ? html`<div class="message message--system">Loading history…</div>`
@@ -643,6 +655,13 @@ export class ChatRoom extends LitElement {
           @user-typing=${() => this.controller.sendTyping()}
           style="${(this._voiceState === 'active' || this._voiceState === 'calling') && this._viewingActiveCall ? 'display: none;' : ''}"
         ></chat-room-composer>
+
+        ${this._previewImageUrl ? html`
+          <chat-image-preview
+            .imageUrl=${this._previewImageUrl}
+            @close-preview=${this.closePreview}
+          ></chat-image-preview>
+        ` : nothing}
       </section>
     `;
   }

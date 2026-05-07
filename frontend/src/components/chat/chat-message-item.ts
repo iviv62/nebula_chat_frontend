@@ -32,6 +32,14 @@ export class ChatMessageItem extends LitElement {
     );
   }
 
+  private handleImageClick(url: string) {
+    this.dispatchEvent(new CustomEvent<{ url: string }>("image-preview", {
+      detail: { url },
+      bubbles: true,
+      composed: true,
+    }));
+  }
+
   private getReactionEntries() {
     return Object.entries(this.message.reactions)
       .map(([emoji, users]) => ({ emoji, users, count: users.length }))
@@ -63,6 +71,8 @@ export class ChatMessageItem extends LitElement {
                   src=${this.message.imageUrl}
                   alt="Image from ${this.message.username}"
                   loading="lazy"
+                  style="cursor: pointer;"
+                  @click=${() => this.handleImageClick(this.message.imageUrl!)}
                 />
               `
             : ""}
