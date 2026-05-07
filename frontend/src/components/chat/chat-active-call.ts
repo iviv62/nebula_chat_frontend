@@ -14,6 +14,8 @@ export class ChatActiveCall extends LitElement {
   @property({ type: Boolean }) isMuted = false;
 
   @state() private timer = "00:00";
+  @state() private showVolumeSlider = false;
+  @state() private volume = 80;
   private intervalId: ReturnType<typeof setInterval> | null = null;
   private callStartTime = 0;
 
@@ -74,6 +76,12 @@ export class ChatActiveCall extends LitElement {
 
   private handleEndCall() {
     this.dispatchEvent(new CustomEvent("voice-stop", { bubbles: true, composed: true }));
+  }
+
+  private handleVolumeChange(e: Event) {
+    const input = e.target as HTMLInputElement;
+    this.volume = Number(input.value);
+    this.dispatchEvent(new CustomEvent("voice-volume-change", { detail: { volume: this.volume }, bubbles: true, composed: true }));
   }
 
   render() {
@@ -155,9 +163,39 @@ export class ChatActiveCall extends LitElement {
             </button>
           </div>
           <div class="active-call__toolbar-right">
-            <button class="active-call__icon-btn">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
-            </button>
+            <div style="position: relative; display: inline-block;">
+              ${this.showVolumeSlider ? html`
+                <div style="position: fixed; inset: 0; z-index: 99;" @click=${() => this.showVolumeSlider = false}></div>
+                <div class="active-call__volume-popup" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 8px; background-color: #1f2937; border-radius: 8px; padding: 12px 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 100;">
+                  <span style="color: #9ca3af; font-size: 12px; font-weight: bold; margin-bottom: 8px;">${this.volume}%</span>
+                  <style>
+                    .popup-slider::-webkit-slider-thumb {
+                      appearance: none;
+                      width: 14px;
+                      height: 14px;
+                      background: #f59e0b;
+                      border-radius: 50%;
+                      cursor: pointer;
+                    }
+                    .popup-slider::-moz-range-thumb {
+                      width: 14px;
+                      height: 14px;
+                      background: #f59e0b;
+                      border-radius: 50%;
+                      cursor: pointer;
+                    }
+                  </style>
+                  <input type="range" min="0" max="100" .value=${String(this.volume)} @input=${this.handleVolumeChange} class="popup-slider" style="appearance: none; width: 100px; height: 6px; background: #374151; accent-color: #f59e0b; border-radius: 3px; outline: none; margin: 0; transform: rotate(-90deg); transform-origin: center; margin-top: 40px; margin-bottom: 40px; cursor: pointer;"/>
+                </div>
+              ` : nothing}
+              <button class="active-call__icon-btn" @click=${() => this.showVolumeSlider = !this.showVolumeSlider}>
+                ${this.volume === 0 ? html`
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+                ` : html`
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+                `}
+              </button>
+            </div>
             <button class="active-call__icon-btn">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="15" y1="3" x2="21" y2="3"></line><line x1="21" y1="3" x2="21" y2="9"></line><line x1="9" y1="21" x2="3" y2="21"></line><line x1="3" y1="21" x2="3" y2="15"></line><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
             </button>

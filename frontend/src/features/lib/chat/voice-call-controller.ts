@@ -135,4 +135,8 @@ export class VoiceCallController {
   setMuted(muted: boolean): void {
     this.adapter.setMuted(muted);
   }
+
+  setVolume(volume: number): void {
+    this.adapter.setVolume(volume);
+  }
 }

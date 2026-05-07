@@ -541,6 +541,9 @@ export class ChatRoom extends LitElement {
                 this._isMuted = e.detail.muted;
                 this.voiceController.setMuted(this._isMuted);
               }}
+              @voice-volume-change=${(e: CustomEvent) => {
+                this.voiceController.setVolume(e.detail.volume);
+              }}
             ></chat-active-call>
           ` : html`
             <chat-voice-bar

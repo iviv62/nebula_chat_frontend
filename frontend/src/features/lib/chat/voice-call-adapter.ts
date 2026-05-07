@@ -117,6 +117,12 @@ export class VoiceCallAdapter {
     }
   }
 
+  setVolume(volume: number): void {
+    document.querySelectorAll("audio[data-stream]").forEach((el) => {
+      (el as HTMLAudioElement).volume = Math.max(0, Math.min(1, volume / 100));
+    });
+  }
+
   close(): void {
     this.stream?.getTracks().forEach((t) => t.stop());
     this.pc?.close();
