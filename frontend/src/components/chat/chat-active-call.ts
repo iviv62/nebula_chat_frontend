@@ -101,8 +101,8 @@ export class ChatActiveCall extends LitElement {
           </div>
           <div class="active-call__header-right">
             <span class="active-call__timer">${this.timer}</span>
-            <button class="active-call__icon-btn">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            <button class="active-call__icon-btn" title="View Chat" @click=${() => this.dispatchEvent(new CustomEvent("return-to-chat", { bubbles: true, composed: true }))}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
             </button>
           </div>
         </div>

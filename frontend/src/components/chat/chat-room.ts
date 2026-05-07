@@ -59,6 +59,8 @@ export class ChatRoom extends LitElement {
 
   @state()
   private isReconnecting = false;
+  
+  @state() private _viewingActiveCall = false;
 
   private themeCtrl = new ThemeController(this);
 
@@ -511,28 +513,40 @@ export class ChatRoom extends LitElement {
           .isReconnecting=${this.isReconnecting}
           .voiceState=${this._voiceState}
           @theme-toggle=${this.toggleTheme}
-          @voice-start=${() => this.voiceController.start()}
+          @voice-start=${() => {
+            this._viewingActiveCall = true;
+            this.voiceController.start();
+          }}
           @voice-stop=${() => this.voiceController.stop()}
         ></chat-room-header>
 
-        <chat-voice-bar
-          .state=${this._voiceState}
-          .participants=${this._voiceParticipants}
-          @voice-stop=${() => this.voiceController.stop()}
-          @voice-dismiss=${() => { this._voiceState = "idle"; }}
-        ></chat-voice-bar>
+        ${this._voiceState === 'active' || this._voiceState === 'calling' ? (
+          this._viewingActiveCall ? html`
+            <chat-active-call
+              .callState=${this._voiceState}
+              .roomName=${this.roomName}
+              .username=${this.username}
+              .participants=${this._voiceParticipants}
+              @voice-stop=${() => {
+                this._viewingActiveCall = false;
+                this.voiceController.stop();
+              }}
+              @return-to-chat=${() => this._viewingActiveCall = false}
+            ></chat-active-call>
+          ` : html`
+            <chat-voice-bar
+              .state=${this._voiceState}
+              .participants=${this._voiceParticipants}
+              .username=${this.username}
+              @return-to-call=${() => this._viewingActiveCall = true}
+              @voice-stop=${() => this.voiceController.stop()}
+              @voice-dismiss=${() => { this._voiceState = "idle"; }}
+            ></chat-voice-bar>
+          `
+        ) : nothing}
 
-        ${this._voiceState === 'active' || this._voiceState === 'calling' ? html`
-          <chat-active-call
-            .callState=${this._voiceState}
-            .roomName=${this.roomName}
-            .username=${this.username}
-            .participants=${this._voiceParticipants}
-            @voice-stop=${() => this.voiceController.stop()}
-          ></chat-active-call>
-        ` : nothing}
-
-        <div class="chat-room__messages" @scroll=${this.handleMessagesScroll}>
+        <div class="chat-room__messages" @scroll=${this.handleMessagesScroll}
+             style="${(this._voiceState === 'active' || this._voiceState === 'calling') && this._viewingActiveCall ? 'display: none;' : ''}">
           ${this.isLoadingHistory
             ? html`<div class="message message--system">Loading history…</div>`
             : this.messages.length === 0
@@ -570,6 +584,7 @@ export class ChatRoom extends LitElement {
         <chat-room-composer
           .submitting=${this.isUploadingImage}
           @message-submit=${this.handleMessageSubmit}
+          style="${(this._voiceState === 'active' || this._voiceState === 'calling') && this._viewingActiveCall ? 'display: none;' : ''}"
         ></chat-room-composer>
       </section>
     `;
