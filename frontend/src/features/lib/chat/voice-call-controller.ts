@@ -1,6 +1,7 @@
 import { VoiceCallAdapter, type VoiceAnswer } from "./voice-call-adapter";
 import { getApiBaseUrl } from "./chat-config";
 
+/** Lifecycle state of a voice call. */
 export type VoiceCallState = "idle" | "calling" | "active" | "error";
 
 export type VoiceCallControllerOptions = {
@@ -9,14 +10,22 @@ export type VoiceCallControllerOptions = {
   room: string;
   username: string;
   onStateChange: (state: VoiceCallState) => void;
+  /** Called when a new local ICE candidate must be forwarded to the remote peer via WS signaling. */
   onIceCandidate: (candidate: RTCIceCandidateInit) => void;
+  /** Called with the full participant list after joining, and whenever it changes. */
   onParticipantsChange?: (participants: { peer_id: string; username: string }[]) => void;
 };
 
+/**
+ * Orchestrates a WebRTC voice call: SDP offer/answer exchange with the server,
+ * ICE candidate handling, participant list seeding, and clean teardown.
+ */
 export class VoiceCallController {
   private adapter = new VoiceCallAdapter();
   private peerId: string | null = null;
+  /** Guards against concurrent start() calls during the async offer/answer phase. */
   private starting = false;
+  /** Shared promise so concurrent stop() calls (user click + ICE failure) run teardown only once. */
   private stopPromise: Promise<void> | null = null;
   private readonly options: VoiceCallControllerOptions;
 
@@ -24,15 +33,34 @@ export class VoiceCallController {
     this.options = options;
   }
 
+  /**
+   * Feeds an ICE candidate received from the remote peer via WS signaling
+   * into the local RTCPeerConnection.
+   */
   async handleRemoteIceCandidate(candidate: RTCIceCandidateInit): Promise<void> {
     await this.adapter.addIceCandidate(candidate);
   }
 
+  /**
+   * Updates room and username in-place when the user switches chat rooms,
+   * so subsequent start() calls use the correct identity.
+   */
   updateIdentity(room: string, username: string): void {
     (this.options as Record<string, unknown>)["room"] = room;
     (this.options as Record<string, unknown>)["username"] = username;
   }
 
+  /**
+   * Initiates a voice call. No-ops if a call is already starting or active.
+   *
+   * 1. Opens the RTCPeerConnection and registers the ICE candidate callback.
+   * 2. Creates a local SDP offer and POSTs it to `/voice/offer`.
+   * 3. Applies the server's SDP answer to complete the WebRTC handshake.
+   * 4. Seeds the participant list, prepending self if the server omitted the caller.
+   * 5. Registers an auto-stop handler for ICE connection failures.
+   *
+   * On any failure, closes the connection and transitions state to `"error"`.
+   */
   async start(): Promise<void> {
     if (this.peerId || this.starting) return;
     this.starting = true;
@@ -59,7 +87,9 @@ export class VoiceCallController {
       this.peerId = answer.peer_id;
 
       await this.adapter.applyAnswer(answer);
-      
+
+      // Prepend self if missing — the server's peer_joined broadcast excludes the joining user,
+      // so the caller must add themselves from the HTTP response instead of waiting for a WS event.
       const participants = answer.participants ?? [];
       if (!participants.some(p => p.username === this.options.username)) {
         participants.unshift({ peer_id: this.peerId, username: this.options.username });
@@ -67,7 +97,6 @@ export class VoiceCallController {
       this.options.onParticipantsChange?.(participants);
 
       this.adapter.onConnectionFailed(() => void this.stop());
-
       this.options.onStateChange("active");
     } catch (err) {
       console.error("[VoiceCallController] start failed", err);
@@ -78,6 +107,12 @@ export class VoiceCallController {
     }
   }
 
+  /**
+   * Ends the active call and cleans up all resources.
+   * Closes the RTCPeerConnection, transitions state to `"idle"`, and notifies
+   * the server via `POST /voice/stop/:peerId` so it can broadcast `call_ended`
+   * to the room. Idempotent — concurrent calls share one teardown promise.
+   */
   async stop(): Promise<void> {
     if (this.stopPromise) return this.stopPromise;
 
