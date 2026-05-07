@@ -131,4 +131,8 @@ export class VoiceCallController {
     await this.stopPromise;
     this.stopPromise = null;
   }
+
+  setMuted(muted: boolean): void {
+    this.adapter.setMuted(muted);
+  }
 }

@@ -110,6 +110,13 @@ export class VoiceCallAdapter {
     };
   }
 
+  setMuted(muted: boolean): void {
+    if (!this.stream) return;
+    for (const track of this.stream.getAudioTracks()) {
+      track.enabled = !muted;
+    }
+  }
+
   close(): void {
     this.stream?.getTracks().forEach((t) => t.stop());
     this.pc?.close();

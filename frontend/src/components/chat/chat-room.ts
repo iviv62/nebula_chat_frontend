@@ -61,6 +61,8 @@ export class ChatRoom extends LitElement {
   private isReconnecting = false;
   
   @state() private _viewingActiveCall = false;
+  
+  @state() private _isMuted = false;
 
   private themeCtrl = new ThemeController(this);
 
@@ -515,6 +517,8 @@ export class ChatRoom extends LitElement {
           @theme-toggle=${this.toggleTheme}
           @voice-start=${() => {
             this._viewingActiveCall = true;
+            this._isMuted = false;
+            this.voiceController.setMuted(false);
             this.voiceController.start();
           }}
           @voice-stop=${() => this.voiceController.stop()}
@@ -527,20 +531,30 @@ export class ChatRoom extends LitElement {
               .roomName=${this.roomName}
               .username=${this.username}
               .participants=${this._voiceParticipants}
+              .isMuted=${this._isMuted}
               @voice-stop=${() => {
                 this._viewingActiveCall = false;
                 this.voiceController.stop();
               }}
               @return-to-chat=${() => this._viewingActiveCall = false}
+              @voice-mute-toggle=${(e: CustomEvent) => {
+                this._isMuted = e.detail.muted;
+                this.voiceController.setMuted(this._isMuted);
+              }}
             ></chat-active-call>
           ` : html`
             <chat-voice-bar
               .state=${this._voiceState}
               .participants=${this._voiceParticipants}
               .username=${this.username}
+              .isMuted=${this._isMuted}
               @return-to-call=${() => this._viewingActiveCall = true}
               @voice-stop=${() => this.voiceController.stop()}
               @voice-dismiss=${() => { this._voiceState = "idle"; }}
+              @voice-mute-toggle=${(e: CustomEvent) => {
+                this._isMuted = e.detail.muted;
+                this.voiceController.setMuted(this._isMuted);
+              }}
             ></chat-voice-bar>
           `
         ) : nothing}

@@ -8,6 +8,7 @@ export class ChatVoiceBar extends LitElement {
   @property() state: VoiceCallState = "idle";
   @property({ type: Array }) participants: VoiceParticipant[] = [];
   @property() username = "";
+  @property({ type: Boolean }) isMuted = false;
   
   @state() private timer = "00:00";
   private intervalId: ReturnType<typeof setInterval> | null = null;
@@ -108,7 +109,17 @@ export class ChatVoiceBar extends LitElement {
           <span class="voice-bar__label" style="font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px;">
             ${this.state === "calling" ? "VOICE CONNECTING..." : this.state === "error" ? "⚠ CALL FAILED" : html`VOICE CONNECTED / ${this.timer}`}
             ${this.state === "active" ? html`
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+              <button 
+                style="background: ${this.isMuted ? '#ef4444' : 'transparent'}; border: none; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 2px;"
+                title=${this.isMuted ? "Unmute" : "Mute"}
+                @click=${() => this.dispatchEvent(new CustomEvent("voice-mute-toggle", { detail: { muted: !this.isMuted }, bubbles: true, composed: true }))}
+              >
+                ${this.isMuted ? html`
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                ` : html`
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                `}
+              </button>
             ` : nothing}
           </span>
         </div>
