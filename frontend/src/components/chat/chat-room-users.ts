@@ -49,9 +49,9 @@ export class ChatRoomUsers extends LitElement {
     const displayUsers = this.getDisplayUsers();
 
     return html`
-      <aside class="chat-room__users" aria-label="Connected users">
+      <aside class="chat-room__users" aria-label="Members in this chat room">
         <div class="chat-room__users-header">
-          <h3 class="chat-room__users-title">Connected</h3>
+          <h3 class="chat-room__users-title">Members</h3>
           <span class="chat-room__users-count">${displayUsers.length}</span>
         </div>
 

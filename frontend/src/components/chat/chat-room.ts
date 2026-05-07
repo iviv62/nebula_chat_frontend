@@ -244,7 +244,10 @@ export class ChatRoom extends LitElement {
     }
   }
 
+  @state() private _activeUsersCount = 0;
+
   private emitActiveUsers(users: string[]) {
+    this._activeUsersCount = users.length;
     this.dispatchEvent(
       new CustomEvent<{ users: string[] }>("active-users-change", {
         detail: { users },
@@ -548,6 +551,7 @@ export class ChatRoom extends LitElement {
           .username=${this.username}
           .theme=${this.themeCtrl.theme}
           .isReconnecting=${this.isReconnecting}
+          .onlineCount=${this._activeUsersCount}
           .voiceState=${this._voiceState}
           @theme-toggle=${this.toggleTheme}
           @voice-start=${() => {

@@ -19,6 +19,9 @@ export class ChatRoomHeader extends LitElement {
   @property({ type: Boolean })
   isReconnecting = false;
 
+  @property({ type: Number })
+  onlineCount = 0;
+
   @property()
   voiceState: VoiceCallState = "idle";
 
@@ -46,7 +49,7 @@ export class ChatRoomHeader extends LitElement {
       <header class="chat-room__header">
         <div class="chat-room__header-left">
           <h2 class="chat-room__title">${this.roomName || this.roomId}</h2>
-          <p class="chat-room__meta">Logged in as <strong>${this.username}</strong> • <span class="chat-room__online">Online</span></p>
+          <p class="chat-room__meta"><span class="chat-room__online">${this.onlineCount} members online</span></p>
         </div>
         <div class="chat-room__header-right">
           <div class="chat-room__header-call-group">
@@ -63,7 +66,7 @@ export class ChatRoomHeader extends LitElement {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
             </button>
           </div>
-          <button class="chat-room__header-action" type="button" title="Search" aria-label="Search">⌕</button>
+        
           <button
             class="chat-room__header-action chat-room__header-action--theme"
             type="button"
@@ -73,7 +76,7 @@ export class ChatRoomHeader extends LitElement {
           >
             ${this.theme === "light" ? "☾" : "☀"}
           </button>
-          <button class="chat-room__header-action" type="button" title="Menu" aria-label="Menu">⋮</button>
+      
         </div>
       </header>
 
