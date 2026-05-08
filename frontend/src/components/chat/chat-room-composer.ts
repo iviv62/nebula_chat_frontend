@@ -94,24 +94,49 @@ export class ChatRoomComposer extends LitElement {
       return;
     }
 
+    if (!this.trySetImageFromFile(file)) {
+      input.value = "";
+      return;
+    }
+
+    input.value = "";
+  }
+
+  private handleTextareaPaste(e: ClipboardEvent) {
+    const items = e.clipboardData?.items;
+    if (!items || items.length === 0) return;
+
+    const imageItem = Array.from(items).find((item) =>
+      item.kind === "file" && item.type.startsWith("image/"),
+    );
+
+    if (!imageItem) return;
+
+    const file = imageItem.getAsFile();
+    if (!file) return;
+
+    // Prevent text paste behavior only when we actually consume an image.
+    e.preventDefault();
+    this.trySetImageFromFile(file);
+  }
+
+  private trySetImageFromFile(file: File): boolean {
     const allowed = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
     const maxBytes = 10 * 1024 * 1024;
 
     if (!allowed.has(file.type)) {
       this.imageError = "Only JPEG, PNG, WebP, and GIF images are supported.";
-      input.value = "";
-      return;
+      return false;
     }
 
     if (file.size > maxBytes) {
       this.imageError = "Image is too large. Maximum allowed size is 10 MB.";
-      input.value = "";
-      return;
+      return false;
     }
 
     this.imageError = "";
     this.setSelectedImage(file);
-    input.value = "";
+    return true;
   }
 
   private setSelectedImage(file: File) {
@@ -249,6 +274,7 @@ export class ChatRoomComposer extends LitElement {
             @compositionend=${() => (this.isComposing = false)}
             @keydown=${this.handleTextareaKeydown}
             @input=${this.handleTextareaInput}
+            @paste=${this.handleTextareaPaste}
           ></textarea>
           <button
             class="chat-room__send-icon"
