@@ -592,6 +592,11 @@
     order: 999;
     margin-right: 0;
     margin-left: 0.15rem;
+
+    .message-reaction-picker__panel {
+      left: auto;
+      right: 0;
+    }
   }
 
   &:hover .message__reaction-picker,
