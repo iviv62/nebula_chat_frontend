@@ -47,6 +47,42 @@ export class ChatMessageItem extends LitElement {
       .sort((a, b) => b.count - a.count || a.emoji.localeCompare(b.emoji));
   }
 
+  private renderTextWithLinks(text: string) {
+    const urlPattern = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+    const matches = Array.from(text.matchAll(urlPattern));
+    if (matches.length === 0) return text;
+
+    const fragments: Array<string | ReturnType<typeof html>> = [];
+    let lastIndex = 0;
+
+    for (const match of matches) {
+      const url = match[0];
+      const href = url.startsWith("http") ? url : `https://${url}`;
+      const index = match.index ?? 0;
+
+      if (index > lastIndex) {
+        fragments.push(text.slice(lastIndex, index));
+      }
+
+      fragments.push(html`
+        <a
+          class="message__link"
+          href=${href}
+          target="_blank"
+          rel="noopener noreferrer"
+        >${url}</a>
+      `);
+
+      lastIndex = index + url.length;
+    }
+
+    if (lastIndex < text.length) {
+      fragments.push(text.slice(lastIndex));
+    }
+
+    return fragments;
+  }
+
   render() {
     if (this.message.kind === "system") {
       return html`<div class="message message--system" data-message-id=${this.message.id}>${this.message.text}</div>`;
@@ -77,12 +113,12 @@ export class ChatMessageItem extends LitElement {
               `
             : ""}
           ${this.message.text
-            ? html`<div class="message__text">${this.message.text}</div>`
+            ? html`<div class="message__text">${this.renderTextWithLinks(this.message.text)}</div>`
+            : ""}
+          ${this.showMeta
+            ? html`<div class="message__time">${formatTime(this.message.createdAt)}</div>`
             : ""}
         </div>
-        ${this.showMeta
-          ? html`<div class="message__time">${formatTime(this.message.createdAt)}</div>`
-          : ""}
         <div class="message__reactions ${isOwnMessage ? "message__reactions--self" : ""}" aria-label="Message reactions">
           <message-reaction-picker
             class="message__reaction-picker"

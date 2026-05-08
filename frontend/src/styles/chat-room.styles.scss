@@ -20,7 +20,7 @@
   --cr-msg-system-bg: #e2e8f0;
   --cr-msg-system-color: #64748b;
   --cr-author-color: #64748b;
-  --cr-time-color: #8ea0b7;
+  --cr-time-color: #000000;
   --cr-banner-bg: #fef3c7;
   --cr-banner-color: #92400e;
   --cr-icon-btn-color: #64748b;
@@ -58,7 +58,7 @@
   --cr-msg-system-bg: rgba(148, 163, 184, 0.16);
   --cr-msg-system-color: #9ca3af;
   --cr-author-color: #9ca3af;
-  --cr-time-color: #6b7280;
+  --cr-time-color: #ffffff;
   --cr-banner-bg: #fbbf24;
   --cr-banner-color: #92400e;
   --cr-icon-btn-color: #9ca3af;
@@ -284,6 +284,7 @@
   &__composer {
     display: flex;
     flex-direction: column;
+    align-items: center;
     position: relative;
     padding: 0.85rem 1.25rem 2rem 1.25rem;
     background: var(--cr-msg-area-bg);
@@ -350,7 +351,7 @@
     display: flex;
     align-items: center;
     gap: 0.7rem;
-    width: 100%;
+    width: min(100%, 980px);
     background: var(--cr-composer-shell-bg);
     border: 1px solid var(--cr-composer-shell-border);
     border-radius: 20px;
@@ -556,13 +557,24 @@
     white-space: pre-wrap;
   }
 
+  &__link {
+    color: #60a5fa;
+    text-decoration: underline;
+   
+    word-break: break-all;
+
+    &:hover {
+      color: #93c5fd;
+    }
+  }
+
   &__time {
-    font-size: 0.6rem;
-    font-weight: 300;
+    font-size: 0.7rem;
+    font-weight: 500;
     letter-spacing: 0.02em;
     color: var(--cr-time-color);
-    margin-top: 0.25rem;
-    margin-left: 0.35rem;
+    margin-top: 0.6rem;
+    display: block;
   }
 
   &__reactions {
@@ -716,8 +728,6 @@
 
     .message__time {
       text-align: right;
-      margin-left: 0;
-      margin-right: 0.25rem;
     }
 
     .message__body {
@@ -725,6 +735,14 @@
       color: var(--cr-msg-self-color);
       border-bottom-right-radius: 4px;
       box-shadow: none;
+    }
+
+    .message__link {
+      color: #0b3b8f;
+
+      &:hover {
+        color: #1d4ed8;
+      }
     }
   }
 
