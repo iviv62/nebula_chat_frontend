@@ -50,14 +50,23 @@ export type VoiceCallAdapterOptions = {
 export class VoiceCallAdapter {
   private pc: RTCPeerConnection | null = null;
   private stream: MediaStream | null = null;
+  private iceQueue: RTCIceCandidateInit[] = [];
+  private isRemoteDescriptionSet = false;
 
   async openConnection(options?: VoiceCallAdapterOptions): Promise<void> {
-    document.querySelectorAll("audio[data-stream]").forEach((el) => el.remove());
-    
-    this.stream = await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: true, noiseSuppression: true },
-      video: false,
-    });
+    this.cleanupAudioElements();
+    this.iceQueue = [];
+    this.isRemoteDescriptionSet = false;
+
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true },
+        video: false,
+      });
+    } catch (error) {
+      throw new Error("Microphone access denied or unavailable.", { cause: error });
+    }
+
     this.pc = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
@@ -65,12 +74,17 @@ export class VoiceCallAdapter {
     this.pc.ontrack = (event: RTCTrackEvent) => {
       for (const stream of event.streams) {
         if (document.querySelector(`audio[data-stream="${stream.id}"]`)) continue;
+
         const audio = document.createElement("audio");
         audio.autoplay = true;
         audio.dataset["stream"] = stream.id;
         audio.srcObject = stream;
         audio.style.display = "none";
         document.body.appendChild(audio);
+
+        stream.getAudioTracks().forEach((track) => {
+          track.onended = () => audio.remove();
+        });
       }
     };
 
@@ -86,20 +100,43 @@ export class VoiceCallAdapter {
   }
 
   async createOffer(): Promise<VoiceOffer> {
-    const offer = await this.pc!.createOffer();
-    await this.pc!.setLocalDescription(offer);
+    if (!this.pc) throw new Error("Peer connection is not initialized.");
+
+    const offer = await this.pc.createOffer();
+    await this.pc.setLocalDescription(offer);
+
+    const localDescription = this.pc.localDescription;
+    if (!localDescription?.sdp) {
+      throw new Error("Local description was not created.");
+    }
+
     return {
-      sdp: this.pc!.localDescription!.sdp,
-      type: this.pc!.localDescription!.type,
+      sdp: localDescription.sdp,
+      type: localDescription.type,
     };
   }
 
   async applyAnswer(answer: VoiceAnswer): Promise<void> {
-    await this.pc!.setRemoteDescription(answer as RTCSessionDescriptionInit);
+    if (!this.pc) throw new Error("Peer connection is not initialized.");
+
+    await this.pc.setRemoteDescription(answer as RTCSessionDescriptionInit);
+    this.isRemoteDescriptionSet = true;
+
+    for (const candidate of this.iceQueue) {
+      await this.pc.addIceCandidate(new RTCIceCandidate(candidate));
+    }
+    this.iceQueue = [];
   }
 
   async addIceCandidate(candidate: RTCIceCandidateInit): Promise<void> {
-    await this.pc?.addIceCandidate(new RTCIceCandidate(candidate));
+    if (!this.pc) return;
+
+    if (!this.isRemoteDescriptionSet) {
+      this.iceQueue.push(candidate);
+      return;
+    }
+
+    await this.pc.addIceCandidate(new RTCIceCandidate(candidate));
   }
 
   onConnectionFailed(cb: () => void): void {
@@ -126,8 +163,14 @@ export class VoiceCallAdapter {
   close(): void {
     this.stream?.getTracks().forEach((t) => t.stop());
     this.pc?.close();
-    document.querySelectorAll("audio[data-stream]").forEach((el) => el.remove());
+    this.cleanupAudioElements();
     this.stream = null;
     this.pc = null;
+    this.iceQueue = [];
+    this.isRemoteDescriptionSet = false;
+  }
+
+  private cleanupAudioElements(): void {
+    document.querySelectorAll("audio[data-stream]").forEach((el) => el.remove());
   }
 }

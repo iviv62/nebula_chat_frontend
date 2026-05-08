@@ -1,5 +1,6 @@
 import { VoiceCallAdapter, type VoiceAnswer } from "./voice-call-adapter";
 import { getApiBaseUrl } from "./chat-config";
+import { fetchWithAuth } from "../http/fetch-interceptor";
 
 /** Lifecycle state of a voice call. */
 export type VoiceCallState = "idle" | "calling" | "active" | "error";
@@ -71,7 +72,7 @@ export class VoiceCallController {
       const offer = await this.adapter.createOffer();
 
       const base = getApiBaseUrl(this.options.apiBase, this.options.wsBase);
-      const res = await fetch(`${base}/voice/offer`, {
+      const res = await fetchWithAuth(`${base}/voice/offer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -124,7 +125,9 @@ export class VoiceCallController {
 
       if (peerId) {
         const base = getApiBaseUrl(this.options.apiBase, this.options.wsBase);
-        await fetch(`${base}/voice/stop/${peerId}`, { method: "POST" }).catch(() => {});
+        await fetchWithAuth(`${base}/voice/stop/${peerId}`, { method: "POST" }).catch((err) => {
+          console.error("Failed to notify backend of call end:", err);
+        });
       }
     })();
 
