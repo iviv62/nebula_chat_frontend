@@ -112,108 +112,9 @@ export class ChatRoom extends LitElement {
       onConnected: () => this.emitRoomConnected(),
       onPresenceChange: (users) => this.emitActiveUsers(users),
       onReactionUpdate: (update) => this.applyReactionUpdate(update),
-      onVoiceEvent: (event: VoiceEvent) => {
-        if (event.kind === "ice_candidate") {
-          void this.voiceController.handleRemoteIceCandidate(event.candidate);
-          return;
-        }
-
-        if (event.kind === "screen_share_started") {
-          if (event.username !== this.username) {
-            this._screenSharingUser = event.username;
-            if (this.screenSharePendingTimer) {
-              clearTimeout(this.screenSharePendingTimer);
-            }
-            this.screenSharePendingTimer = setTimeout(() => {
-              if (this._screenSharingUser === event.username && !this._screenShareStream) {
-                this._screenSharingUser = null;
-                this._isScreenSharing = false;
-              }
-              this.screenSharePendingTimer = null;
-            }, 12000);
-            this.requestUpdate();
-          }
-          this.addSystemNotice(`${event.username} started sharing their screen`);
-          return;
-        }
-
-        if (event.kind === "screen_share_stopped") {
-          if (this.screenSharePendingTimer) {
-            clearTimeout(this.screenSharePendingTimer);
-            this.screenSharePendingTimer = null;
-          }
-
-          this._screenSharingUser = null;
-          this._screenShareStream = null;
-          this._isScreenSharing = false;
-          this.requestUpdate();
-          this.addSystemNotice(`${event.username} stopped sharing their screen`);
-          return;
-        }
-        
-        // Optimistically update the participants array depending on the event
-        if (event.kind === "peer_joined") {
-          this._voiceParticipants = event.participants;
-          this.addSystemNotice(`${event.username} joined the voice call`);
-          return;
-        }
-        if (event.kind === "call_ended") {
-          this._voiceParticipants = this._voiceParticipants.filter(u => u.username !== event.username);
-          if (this._screenSharingUser === event.username) {
-            if (this.screenSharePendingTimer) {
-              clearTimeout(this.screenSharePendingTimer);
-              this.screenSharePendingTimer = null;
-            }
-            this._screenSharingUser = null;
-            this._screenShareStream = null;
-            this._isScreenSharing = false;
-          }
-          this.addSystemNotice(`${event.username} left the voice call`);
-          return;
-        }
-        if (event.kind === "call_started") {
-          if (!this._voiceParticipants.some(u => u.username === event.username)) {
-            this._voiceParticipants = [...this._voiceParticipants, { peer_id: event.peerId, username: event.username }];
-          }
-        }
-        
-        // As a fallback to ensure we are never out of sync, fetch the authoritative list
-        if (event.kind === "call_started") {
-           void this.loadVoiceParticipants();
-        }
-
-        const names = { call_started: "started", call_error: "had a call error" };
-        this.addSystemNotice(`${event.username} ${names[event.kind as "call_started" | "call_error"]} a voice call`);
-      },
-      onTypingEvent: (event: TypingEvent) => {
-        if (event.username === this.username) return;
-
-        this._typingUsers.add(event.username);
-        this._typingUsers = new Set(this._typingUsers); // trigger re-render
-        this.emitTypingUsers();
-
-        const existingTimer = this.typingTimers.get(event.username);
-        if (existingTimer) {
-          clearTimeout(existingTimer);
-        }
-
-        const newTimer = setTimeout(() => {
-          this._typingUsers.delete(event.username);
-          this._typingUsers = new Set(this._typingUsers); // trigger re-render
-          this.emitTypingUsers();
-          this.typingTimers.delete(event.username);
-        }, 1500);
-
-        this.typingTimers.set(event.username, newTimer);
-      },
-      onLoadingChange: (isLoading) => {
-        this.isLoadingHistory = isLoading;
-        // After history load completes, the first incoming user message from WS replay
-        // is treated as the "last seen" boundary anchor.
-        if (!isLoading) {
-          this.awaitingFirstReplayMessage = true;
-        }
-      },
+      onVoiceEvent: (event: VoiceEvent) => this.handleVoiceEvent(event),
+      onTypingEvent: (event: TypingEvent) => this.handleTypingEvent(event),
+      onLoadingChange: (isLoading) => this.handleLoadingChange(isLoading),
       onReconnectChange: (isReconnecting) => (this.isReconnecting = isReconnecting),
     });
 
@@ -251,11 +152,7 @@ export class ChatRoom extends LitElement {
         this._screenShareStream = stream;
         this._isScreenSharing = Boolean(stream);
         if (stream && this.voiceController.isScreenSharing) {
-          // Local sharer
           this._screenSharingUser = this.username;
-        } else if (stream && !this._screenSharingUser) {
-          // Remote track arrived before WS screen_share_started event
-          this._screenSharingUser = "Sharing…"; // WS event will update this imminently
         }
         if (!stream && this._screenSharingUser === this.username) {
           this._screenSharingUser = null;
@@ -355,6 +252,156 @@ export class ChatRoom extends LitElement {
     this.voiceController.updateIdentity(this.roomId, this.username);
   }
 
+  private handleVoiceEvent(event: VoiceEvent) {
+    if (event.kind === "ice_candidate") {
+      void this.voiceController.handleRemoteIceCandidate(event.candidate);
+      return;
+    }
+
+    if (event.kind === "screen_share_started") {
+      if (event.username !== this.username) {
+        this._screenSharingUser = event.username;
+        if (this.screenSharePendingTimer) {
+          clearTimeout(this.screenSharePendingTimer);
+        }
+        this.screenSharePendingTimer = setTimeout(() => {
+          if (this._screenSharingUser === event.username && !this._screenShareStream) {
+            this._screenSharingUser = null;
+            this._isScreenSharing = false;
+          }
+          this.screenSharePendingTimer = null;
+        }, 12000);
+        this.requestUpdate();
+      }
+      this.addSystemNotice(`${event.username} started sharing their screen`);
+      return;
+    }
+
+    if (event.kind === "screen_share_stopped") {
+      if (this.screenSharePendingTimer) {
+        clearTimeout(this.screenSharePendingTimer);
+        this.screenSharePendingTimer = null;
+      }
+
+      this._screenSharingUser = null;
+      this._screenShareStream = null;
+      this._isScreenSharing = false;
+      this.requestUpdate();
+      this.addSystemNotice(`${event.username} stopped sharing their screen`);
+      return;
+    }
+
+    // Optimistically update the participants array depending on the event
+    if (event.kind === "peer_joined") {
+      this._voiceParticipants = event.participants;
+      this.addSystemNotice(`${event.username} joined the voice call`);
+      return;
+    }
+    if (event.kind === "call_ended") {
+      this._voiceParticipants = this._voiceParticipants.filter(u => u.username !== event.username);
+      if (this._screenSharingUser === event.username) {
+        if (this.screenSharePendingTimer) {
+          clearTimeout(this.screenSharePendingTimer);
+          this.screenSharePendingTimer = null;
+        }
+        this._screenSharingUser = null;
+        this._screenShareStream = null;
+        this._isScreenSharing = false;
+      }
+      this.addSystemNotice(`${event.username} left the voice call`);
+      return;
+    }
+    if (event.kind === "call_started") {
+      if (!this._voiceParticipants.some(u => u.username === event.username)) {
+        this._voiceParticipants = [...this._voiceParticipants, { peer_id: event.peerId, username: event.username }];
+      }
+    }
+
+    // As a fallback to ensure we are never out of sync, fetch the authoritative list
+    if (event.kind === "call_started") {
+      void this.loadVoiceParticipants();
+    }
+
+    const names = { call_started: "started", call_error: "had a call error" };
+    this.addSystemNotice(`${event.username} ${names[event.kind as "call_started" | "call_error"]} a voice call`);
+  }
+
+  private handleTypingEvent(event: TypingEvent) {
+    if (event.username === this.username) return;
+
+    this._typingUsers.add(event.username);
+    this._typingUsers = new Set(this._typingUsers); // trigger re-render
+    this.emitTypingUsers();
+
+    const existingTimer = this.typingTimers.get(event.username);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+    }
+
+    const newTimer = setTimeout(() => {
+      this._typingUsers.delete(event.username);
+      this._typingUsers = new Set(this._typingUsers); // trigger re-render
+      this.emitTypingUsers();
+      this.typingTimers.delete(event.username);
+    }, 1500);
+
+    this.typingTimers.set(event.username, newTimer);
+  }
+
+  private handleLoadingChange(isLoading: boolean) {
+    this.isLoadingHistory = isLoading;
+    // After history load completes, the first incoming user message from WS replay
+    // is treated as the "last seen" boundary anchor.
+    if (!isLoading) {
+      this.awaitingFirstReplayMessage = true;
+    }
+  }
+
+  private handleVoiceStart = () => {
+    this._viewingActiveCall = true;
+    this._isMuted = false;
+    this.voiceController.setMuted(false);
+    this.voiceController.start();
+  };
+
+  private handleVoiceStop = () => {
+    this.voiceController.stop();
+  };
+
+  private handleActiveCallVoiceStop = () => {
+    this._viewingActiveCall = false;
+    this.voiceController.stop();
+  };
+
+  private handleReturnToChat = () => {
+    this._viewingActiveCall = false;
+  };
+
+  private handleReturnToCall = () => {
+    this._viewingActiveCall = true;
+  };
+
+  private handleVoiceDismiss = () => {
+    this._voiceState = "idle";
+  };
+
+  private handleMuteToggle = (e: CustomEvent<{ muted: boolean }>) => {
+    this._isMuted = e.detail.muted;
+    this.voiceController.setMuted(this._isMuted);
+  };
+
+  private handleVolumeChange = (e: CustomEvent<{ volume: number }>) => {
+    this.voiceController.setVolume(e.detail.volume);
+  };
+
+  private handleScreenShareToggleRequest = () => {
+    void this.handleScreenShareToggle();
+  };
+
+  private handleUserTyping = () => {
+    this.controller.sendTyping();
+  };
+
   private handleMessagesUpdated() {
     this.applyPendingScrollEffect();
     this.applyUnreadFallbackFromSnapshot();
@@ -446,11 +493,18 @@ export class ChatRoom extends LitElement {
     try {
       if (this.voiceController.isScreenSharing) {
         await this.voiceController.stopScreenShare();
-      } else {
-        await this.voiceController.startScreenShare();
+        this._isScreenSharing = this.voiceController.isScreenSharing;
+        if (this._screenSharingUser === this.username) {
+          this._screenSharingUser = null;
+        }
+        return;
       }
-      // All state (_isScreenSharing, _screenSharingUser, _screenShareStream)
-      // is managed exclusively by onScreenShareTrack callback
+
+      await this.voiceController.startScreenShare();
+      this._isScreenSharing = this.voiceController.isScreenSharing;
+      if (!this._isScreenSharing && this._screenSharingUser === this.username) {
+        this._screenSharingUser = null;
+      }
     } catch (error) {
       console.error("[ChatRoom] screen share toggle failed", error);
       this.addSystemNotice("Screen sharing could not be updated.");
@@ -651,13 +705,8 @@ export class ChatRoom extends LitElement {
           .onlineCount=${this._activeUsersCount}
           .voiceState=${this._voiceState}
           @theme-toggle=${this.toggleTheme}
-          @voice-start=${() => {
-            this._viewingActiveCall = true;
-            this._isMuted = false;
-            this.voiceController.setMuted(false);
-            this.voiceController.start();
-          }}
-          @voice-stop=${() => this.voiceController.stop()}
+          @voice-start=${this.handleVoiceStart}
+          @voice-stop=${this.handleVoiceStop}
         ></chat-room-header>
 
         ${this._voiceState === 'active' || this._voiceState === 'calling' ? (
@@ -671,21 +720,11 @@ export class ChatRoom extends LitElement {
               .isScreenSharing=${this._isScreenSharing}
               .screenSharingUser=${this._screenSharingUser}
               .screenShareStream=${this._screenShareStream}
-              @voice-stop=${() => {
-                this._viewingActiveCall = false;
-                this.voiceController.stop();
-              }}
-              @return-to-chat=${() => this._viewingActiveCall = false}
-              @voice-mute-toggle=${(e: CustomEvent) => {
-                this._isMuted = e.detail.muted;
-                this.voiceController.setMuted(this._isMuted);
-              }}
-              @voice-volume-change=${(e: CustomEvent) => {
-                this.voiceController.setVolume(e.detail.volume);
-              }}
-              @screen-share-toggle=${() => {
-                void this.handleScreenShareToggle();
-              }}
+              @voice-stop=${this.handleActiveCallVoiceStop}
+              @return-to-chat=${this.handleReturnToChat}
+              @voice-mute-toggle=${this.handleMuteToggle}
+              @voice-volume-change=${this.handleVolumeChange}
+              @screen-share-toggle=${this.handleScreenShareToggleRequest}
             ></chat-active-call>
           ` : html`
             <chat-voice-bar
@@ -693,13 +732,10 @@ export class ChatRoom extends LitElement {
               .participants=${this._voiceParticipants}
               .username=${this.username}
               .isMuted=${this._isMuted}
-              @return-to-call=${() => this._viewingActiveCall = true}
-              @voice-stop=${() => this.voiceController.stop()}
-              @voice-dismiss=${() => { void this.voiceController.stop(); }}
-              @voice-mute-toggle=${(e: CustomEvent) => {
-                this._isMuted = e.detail.muted;
-                this.voiceController.setMuted(this._isMuted);
-              }}
+              @return-to-call=${this.handleReturnToCall}
+              @voice-stop=${this.handleVoiceStop}
+              @voice-dismiss=${this.handleVoiceDismiss}
+              @voice-mute-toggle=${this.handleMuteToggle}
             ></chat-voice-bar>
           `
         ) : nothing}
@@ -745,7 +781,7 @@ export class ChatRoom extends LitElement {
         <chat-room-composer
           .submitting=${this.isUploadingImage}
           @message-submit=${this.handleMessageSubmit}
-          @user-typing=${() => this.controller.sendTyping()}
+          @user-typing=${this.handleUserTyping}
           style="${(this._voiceState === 'active' || this._voiceState === 'calling') && this._viewingActiveCall ? 'display: none;' : ''}"
         ></chat-room-composer>
 
