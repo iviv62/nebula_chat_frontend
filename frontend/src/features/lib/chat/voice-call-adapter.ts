@@ -9,7 +9,8 @@ export type VoiceEvent =
   | { kind: "peer_joined"; peerId: string; username: string; room: string; participants: { peer_id: string; username: string }[] }
   | { kind: "ice_candidate"; peerId: string; room: string; candidate: RTCIceCandidateInit }
   | { kind: "screen_share_started"; peerId: string; username: string; room: string }
-  | { kind: "screen_share_stopped"; peerId: string; username: string; room: string };
+  | { kind: "screen_share_stopped"; peerId: string; username: string; room: string }
+  | { kind: "server_offer"; peerId: string; room: string; sdp: string; sdpType: RTCSdpType };
 
 // ── Extractor (same pattern as extractPresenceUpdate / extractReactionUpdate) ──
 export function extractVoiceEvent(payload: unknown): VoiceEvent | null {
@@ -40,11 +41,14 @@ export function extractVoiceEvent(payload: unknown): VoiceEvent | null {
       candidate: p["candidate"] as RTCIceCandidateInit,
     };
   } else if (event === "screen_share_started" || event === "screen_share_stopped") {
+    return { kind: event, peerId, username, room };
+  } else if (event === "server_offer") {
     return {
-      kind: event,
+      kind: "server_offer",
       peerId,
-      username,
       room,
+      sdp: String(p["sdp"] ?? ""),
+      sdpType: (p["sdp_type"] as RTCSdpType) ?? "offer",
     };
   }
 
@@ -114,9 +118,7 @@ export class VoiceCallAdapter {
         emitAttached();
         event.track.onunmute = emitAttached;
         event.track.onmute = emitDetached;
-        event.track.onended = () => {
-          emitDetached();
-        };
+        event.track.onended = () => { emitDetached(); };
         return;
       }
 
@@ -143,9 +145,30 @@ export class VoiceCallAdapter {
         this.options?.onIceCandidate?.(event.candidate.toJSON());
       }
     };
-
   }
 
+  /** Apply a server-sent SDP offer and return an SDP answer. */
+  async applyOffer(sdp: string, type: RTCSdpType): Promise<VoiceOffer> {
+    if (!this.pc) throw new Error("Peer connection is not initialized.");
+    this.isRemoteDescriptionSet = false;
+    await this.pc.setRemoteDescription(new RTCSessionDescription({ sdp, type }));
+    this.isRemoteDescriptionSet = true;
+
+    for (const candidate of this.iceQueue) {
+      await this.pc.addIceCandidate(new RTCIceCandidate(candidate));
+    }
+    this.iceQueue = [];
+
+    const answer = await this.pc.createAnswer();
+    await this.pc.setLocalDescription(answer);
+
+    return {
+      sdp: this.pc.localDescription!.sdp,
+      type: this.pc.localDescription!.type,
+    };
+  }
+
+  /** @deprecated Only used for screen share renegotiation offers sent by the client. */
   async createOffer(): Promise<VoiceOffer> {
     if (!this.pc) throw new Error("Peer connection is not initialized.");
 
@@ -157,10 +180,7 @@ export class VoiceCallAdapter {
       throw new Error("Local description was not created.");
     }
 
-    return {
-      sdp: localDescription.sdp,
-      type: localDescription.type,
-    };
+    return { sdp: localDescription.sdp, type: localDescription.type };
   }
 
   async applyAnswer(answer: VoiceAnswer): Promise<void> {
@@ -214,14 +234,10 @@ export class VoiceCallAdapter {
       try {
         await existingVideoTransceiver.sender.replaceTrack(videoTrack);
       } catch {
-        this.videoTransceiver = this.pc.addTransceiver(videoTrack, {
-          direction: "sendrecv",
-        });
+        this.videoTransceiver = this.pc.addTransceiver(videoTrack, { direction: "sendrecv" });
       }
     } else {
-      this.videoTransceiver = this.pc.addTransceiver(videoTrack, {
-        direction: "sendrecv",
-      });
+      this.videoTransceiver = this.pc.addTransceiver(videoTrack, { direction: "sendrecv" });
     }
 
     this.screenSender = this.videoTransceiver?.sender ?? null;
@@ -245,9 +261,7 @@ export class VoiceCallAdapter {
 
     if (this.videoTransceiver) {
       this.videoTransceiver.direction = "recvonly";
-      void this.videoTransceiver.sender.replaceTrack(null).catch(() => {
-        // Best-effort rollback for failed screen-share transitions.
-      });
+      void this.videoTransceiver.sender.replaceTrack(null).catch(() => {});
     }
   }
 

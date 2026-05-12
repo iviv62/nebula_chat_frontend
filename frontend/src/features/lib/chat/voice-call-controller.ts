@@ -19,19 +19,19 @@ export type VoiceCallControllerOptions = {
 };
 
 /**
- * Orchestrates a WebRTC voice call: SDP offer/answer exchange with the server,
- * ICE candidate handling, participant list seeding, and clean teardown.
+ * Orchestrates a WebRTC voice call using the server-offer pattern:
+ * the backend creates the SDP offer via POST /voice/join, the client
+ * answers via POST /voice/answer. Server-driven renegotiation is handled
+ * via the "server_offer" WebSocket event → handleServerOffer().
  */
 export class VoiceCallController {
   private adapter = new VoiceCallAdapter();
   private peerId: string | null = null;
   private currentRoom: string;
   private currentUsername: string;
-  /** Guards against concurrent start() calls during the async offer/answer phase. */
   private starting = false;
   private screenShareInProgress = false;
   private pendingStopScreenShare = false;
-  /** Shared promise so concurrent stop() calls (user click + ICE failure) run teardown only once. */
   private stopPromise: Promise<void> | null = null;
   private readonly options: VoiceCallControllerOptions;
 
@@ -45,33 +45,20 @@ export class VoiceCallController {
     return this.adapter.isScreenSharing;
   }
 
-  /**
-   * Feeds an ICE candidate received from the remote peer via WS signaling
-   * into the local RTCPeerConnection.
-   */
   async handleRemoteIceCandidate(candidate: RTCIceCandidateInit): Promise<void> {
     await this.adapter.addIceCandidate(candidate);
   }
 
-  /**
-   * Updates room and username in-place when the user switches chat rooms,
-   * so subsequent start() calls use the correct identity.
-   */
   updateIdentity(room: string, username: string): void {
     this.currentRoom = room;
     this.currentUsername = username;
   }
 
   /**
-   * Initiates a voice call. No-ops if a call is already starting or active.
-   *
-   * 1. Opens the RTCPeerConnection and registers the ICE candidate callback.
-   * 2. Creates a local SDP offer and POSTs it to `/voice/offer`.
-   * 3. Applies the server's SDP answer to complete the WebRTC handshake.
-   * 4. Seeds the participant list, prepending self if the server omitted the caller.
-   * 5. Registers an auto-stop handler for ICE connection failures.
-   *
-   * On any failure, closes the connection and transitions state to `"error"`.
+   * Join a voice call using the server-offer flow:
+   * 1. POST /voice/join — server creates RTCPeerConnection and returns SDP offer
+   * 2. Apply the offer locally and create an SDP answer
+   * 3. POST /voice/answer — send answer back to server
    */
   async start(): Promise<void> {
     this.stopPromise = null;
@@ -84,29 +71,42 @@ export class VoiceCallController {
         onIceCandidate: this.options.onIceCandidate,
         onScreenShareTrack: this.options.onScreenShareTrack,
       });
-      const offer = await this.adapter.createOffer();
 
       const base = getApiBaseUrl(this.options.apiBase, this.options.wsBase);
-      const res = await fetchWithAuth(`${base}/voice/offer`, {
+
+      // Step 1: ask server to join — it returns an SDP offer
+      const joinRes = await fetchWithAuth(`${base}/voice/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...offer,
           room: this.currentRoom,
           username: this.currentUsername,
         }),
       });
 
-      if (!res.ok) throw new Error(`Offer rejected: ${res.status}`);
+      if (!joinRes.ok) throw new Error(`Join rejected: ${joinRes.status}`);
 
-      const answer: VoiceAnswer = await res.json();
-      this.peerId = answer.peer_id;
+      const joinData: VoiceAnswer = await joinRes.json();
+      this.peerId = joinData.peer_id;
 
-      await this.adapter.applyAnswer(answer);
+      // Step 2: apply server offer, create answer
+      const answer = await this.adapter.applyOffer(joinData.sdp, joinData.type);
 
-      // Prepend self if missing — the server's peer_joined broadcast excludes the joining user,
-      // so the caller must add themselves from the HTTP response instead of waiting for a WS event.
-      const participants = answer.participants ?? [];
+      // Step 3: send answer to server
+      const answerRes = await fetchWithAuth(`${base}/voice/answer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          peer_id: this.peerId,
+          sdp: answer.sdp,
+          type: answer.type,
+        }),
+      });
+
+      if (!answerRes.ok) throw new Error(`Answer rejected: ${answerRes.status}`);
+
+      // Seed participant list — prepend self if server omitted the caller
+      const participants = joinData.participants ?? [];
       if (!participants.some(p => p.username === this.currentUsername)) {
         participants.unshift({ peer_id: this.peerId, username: this.currentUsername });
       }
@@ -121,6 +121,14 @@ export class VoiceCallController {
     } finally {
       this.starting = false;
     }
+  }
+
+  /**
+   * Handle a server-initiated renegotiation offer ("server_offer" WS event).
+   * Returns the SDP answer to be sent back via POST /voice/answer.
+   */
+  async handleServerOffer(sdp: string, sdpType: RTCSdpType): Promise<VoiceOffer> {
+    return this.adapter.applyOffer(sdp, sdpType);
   }
 
   async startScreenShare(): Promise<void> {
@@ -143,7 +151,7 @@ export class VoiceCallController {
       }
 
       try {
-        await this.renegotiate(offer);
+        await this.renegotiateScreenShare(offer);
         this.options.onScreenShareTrack?.(this.adapter.getScreenStream());
       } catch (err) {
         console.error("[VoiceCallController] renegotiation failed, reverting", err);
@@ -151,7 +159,7 @@ export class VoiceCallController {
 
         try {
           const restoreOffer = await this.adapter.createOffer();
-          await this.renegotiate(restoreOffer);
+          await this.renegotiateScreenShare(restoreOffer);
         } catch {
           void this.stop();
         }
@@ -166,9 +174,7 @@ export class VoiceCallController {
   }
 
   async stopScreenShare(): Promise<void> {
-    if (!this.peerId) {
-      return;
-    }
+    if (!this.peerId) return;
     if (!this.adapter.isScreenSharing) return;
 
     if (this.screenShareInProgress) {
@@ -182,7 +188,7 @@ export class VoiceCallController {
       const offer = await this.adapter.stopScreenShare();
 
       try {
-        await this.renegotiate(offer);
+        await this.renegotiateScreenShare(offer);
         this.options.onScreenShareTrack?.(null);
       } catch (err) {
         console.error("[VoiceCallController] stop screen share renegotiation failed", err);
@@ -194,12 +200,6 @@ export class VoiceCallController {
     }
   }
 
-  /**
-   * Ends the active call and cleans up all resources.
-   * Closes the RTCPeerConnection, transitions state to `"idle"`, and notifies
-   * the server via `POST /voice/stop/:peerId` so it can broadcast `call_ended`
-   * to the room. Idempotent — concurrent calls share one teardown promise.
-   */
   async stop(): Promise<void> {
     if (this.stopPromise) return this.stopPromise;
 
@@ -231,25 +231,27 @@ export class VoiceCallController {
     this.adapter.setVolume(volume);
   }
 
-  private async renegotiate(offer: VoiceOffer): Promise<void> {
+  /**
+   * Screen share renegotiation: client-offer flow (P2P screen share signaling
+   * is relayed via WebSocket, not HTTP — this only handles the audio SFU side).
+   */
+  private async renegotiateScreenShare(offer: VoiceOffer): Promise<void> {
     if (!this.peerId) return;
 
     this.adapter.resetRemoteDescriptionState();
 
     const base = getApiBaseUrl(this.options.apiBase, this.options.wsBase);
-    const res = await fetchWithAuth(`${base}/voice/offer`, {
+    const res = await fetchWithAuth(`${base}/voice/answer`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        ...offer,
-        room: this.currentRoom,
-        username: this.currentUsername,
         peer_id: this.peerId,
-        is_renegotiation: true,
+        sdp: offer.sdp,
+        type: offer.type,
       }),
     });
 
-    if (!res.ok) throw new Error(`Renegotiation rejected: ${res.status}`);
+    if (!res.ok) throw new Error(`Screen share renegotiation rejected: ${res.status}`);
 
     const answer: VoiceAnswer = await res.json();
     await this.adapter.applyAnswer(answer);

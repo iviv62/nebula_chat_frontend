@@ -39,6 +39,8 @@ export type ChatRoomControllerOptions = {
   onTypingEvent?: (event: TypingEvent) => void;
   onLoadingChange: (isLoading: boolean) => void;
   onReconnectChange: (isReconnecting: boolean) => void;
+  /** Called when the server sends a renegotiation offer; return the SDP answer. */
+  onServerOffer?: (peerId: string, sdp: string, sdpType: RTCSdpType) => Promise<{ sdp: string; type: RTCSdpType }>;
 };
 
 export class ChatRoomController {
@@ -136,6 +138,19 @@ export class ChatRoomController {
     }
   }
 
+  /** Send a voice answer back to the server after handling a server_offer event. */
+  sendVoiceAnswer(peerId: string, sdp: string, type: RTCSdpType): void {
+    if (this.socket?.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify({
+        type: "voice",
+        event: "sdp_answer",
+        peer_id: peerId,
+        sdp,
+        sdp_type: type,
+      }));
+    }
+  }
+
   sendTyping(): void {
     if (this.socket?.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify({
@@ -213,7 +228,7 @@ export class ChatRoomController {
         }
       }
     } catch {
-      // History unavailable &mdash; proceed to live connection
+      // History unavailable — proceed to live connection
     } finally {
       this.options.onLoadingChange(false);
       if (!this.intentionalClose) {
@@ -245,7 +260,6 @@ export class ChatRoomController {
       try {
         payload = JSON.parse(String(event.data));
       } catch {
-        // Fallback to plain text for transitional servers.
         this.options.onMessage(toSystemMessage(String(event.data)));
         return;
       }
@@ -264,7 +278,27 @@ export class ChatRoomController {
       const voiceEvent = extractVoiceEvent(payload);
       if (voiceEvent) {
         if (!this.options.onVoiceEvent) return;
-        // Only route events that belong to this room
+
+        // Handle server_offer inline: apply offer → send answer back via HTTP
+        if (voiceEvent.kind === "server_offer") {
+          const { peerId, sdp, sdpType, room } = voiceEvent;
+          if (!room || room === this.room) {
+            void this.options.onServerOffer?.(peerId, sdp, sdpType).then((answer) => {
+              const base = this.getResolvedApiBaseUrl();
+              void fetchWithAuth(`${base}/voice/answer`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ peer_id: peerId, sdp: answer.sdp, type: answer.type }),
+              }).catch((err) => {
+                console.error("[ChatRoomController] failed to POST voice answer", err);
+              });
+            }).catch((err) => {
+              console.error("[ChatRoomController] failed to handle server_offer", err);
+            });
+          }
+          return;
+        }
+
         if (!voiceEvent.room || voiceEvent.room === this.room) {
           this.options.onVoiceEvent(voiceEvent);
         }
@@ -273,11 +307,11 @@ export class ChatRoomController {
 
       const typingEvent = extractTypingEvent(payload);
       if (typingEvent) {
-         if (!this.options.onTypingEvent) return;
-         if (!typingEvent.room || typingEvent.room === this.room) {
-           this.options.onTypingEvent(typingEvent);
-         }
-         return;
+        if (!this.options.onTypingEvent) return;
+        if (!typingEvent.room || typingEvent.room === this.room) {
+          this.options.onTypingEvent(typingEvent);
+        }
+        return;
       }
 
       const systemText = extractSystemText(payload);
@@ -337,7 +371,6 @@ export class ChatRoomController {
       clearTimeout(this.seenSyncTimer);
     }
 
-    // Throttle to avoid posting on every message burst.
     this.seenSyncTimer = setTimeout(() => {
       this.seenSyncTimer = null;
       this.flushSeenToServer();
@@ -349,11 +382,7 @@ export class ChatRoomController {
 
     const valueToSync = this.lastSeen;
     void updateConversationLastSeen(this.room, this.username, valueToSync)
-      .then(() => {
-        this.lastSyncedSeen = valueToSync;
-      })
-      .catch(() => {
-        // Best-effort only: chat flow should not fail if this endpoint is absent.
-      });
+      .then(() => { this.lastSyncedSeen = valueToSync; })
+      .catch(() => {});
   }
 }
