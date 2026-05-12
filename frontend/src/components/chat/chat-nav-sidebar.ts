@@ -2,6 +2,7 @@ import { LitElement, html, unsafeCSS } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import chatNavSidebarStylesRaw from "../../styles/chat-nav-sidebar.styles.scss?inline";
 import { navigate } from "../../utils/navigate";
+import { logout } from "../../features/lib/auth/auth-api";
 
 @customElement("chat-nav-sidebar")
 export class ChatNavSidebar extends LitElement {
@@ -21,6 +22,16 @@ export class ChatNavSidebar extends LitElement {
     if (parts.length === 0) return "?";
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
     return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
+  }
+
+  private async handleLogout() {
+    try {
+      await logout();
+    } catch (e) {
+      console.error("Logout failed", e);
+    } finally {
+      navigate("/login");
+    }
   }
 
   render() {
@@ -84,8 +95,22 @@ export class ChatNavSidebar extends LitElement {
           </button>
         </div>
 
-        <!-- User avatar -->
-        <div class="nav-sidebar__bottom">
+        <div class="nav-sidebar__bottom" style="margin-top: auto; display: flex; flex-direction: column; gap: 1rem; align-items: center;">
+          <!-- Logout icon -->
+          <button
+            class="nav-sidebar__icon-btn"
+            title="Logout"
+            aria-label="Logout"
+            @click=${this.handleLogout}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+          </button>
+
+          <!-- User avatar -->
           <button class="nav-sidebar__avatar" title=${this.currentUsername} aria-label="Your profile">
             ${this.getInitials(this.currentUsername)}
           </button>
