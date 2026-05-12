@@ -104,20 +104,6 @@ export class ChatRoom extends LitElement {
   constructor() {
     super();
 
-    this.controller = new ChatRoomController({
-      apiBase: import.meta.env.VITE_API_BASE_URL,
-      wsBase: import.meta.env.VITE_WS_BASE_URL,
-      pageProtocol: window.location.protocol,
-      onMessage: (message) => this.addMessage(message),
-      onConnected: () => this.emitRoomConnected(),
-      onPresenceChange: (users) => this.emitActiveUsers(users),
-      onReactionUpdate: (update) => this.applyReactionUpdate(update),
-      onVoiceEvent: (event: VoiceEvent) => this.handleVoiceEvent(event),
-      onTypingEvent: (event: TypingEvent) => this.handleTypingEvent(event),
-      onLoadingChange: (isLoading) => this.handleLoadingChange(isLoading),
-      onReconnectChange: (isReconnecting) => (this.isReconnecting = isReconnecting),
-    });
-
     this.voiceController = new VoiceCallController({
       apiBase: import.meta.env.VITE_API_BASE_URL,
       wsBase: import.meta.env.VITE_WS_BASE_URL,
@@ -156,6 +142,22 @@ export class ChatRoom extends LitElement {
         }
         this.requestUpdate();
       },
+    });
+
+    this.controller = new ChatRoomController({
+      apiBase: import.meta.env.VITE_API_BASE_URL,
+      wsBase: import.meta.env.VITE_WS_BASE_URL,
+      pageProtocol: window.location.protocol,
+      onMessage: (message) => this.addMessage(message),
+      onConnected: () => this.emitRoomConnected(),
+      onPresenceChange: (users) => this.emitActiveUsers(users),
+      onReactionUpdate: (update) => this.applyReactionUpdate(update),
+      onVoiceEvent: (event: VoiceEvent) => this.handleVoiceEvent(event),
+      onTypingEvent: (event: TypingEvent) => this.handleTypingEvent(event),
+      onLoadingChange: (isLoading) => this.handleLoadingChange(isLoading),
+      onReconnectChange: (isReconnecting) => (this.isReconnecting = isReconnecting),
+      onServerOffer: (peerId, sdp, sdpType) =>
+        this.voiceController.handleServerOffer(sdp, sdpType),
     });
   }
 
@@ -299,7 +301,6 @@ export class ChatRoom extends LitElement {
       return;
     }
 
-    // Optimistically update the participants array depending on the event
     if (event.kind === "peer_joined") {
       this._voiceParticipants = event.participants;
       this.addSystemNotice(`${event.username} joined the voice call`);
@@ -318,7 +319,6 @@ export class ChatRoom extends LitElement {
       }
     }
 
-    // As a fallback to ensure we are never out of sync, fetch the authoritative list
     if (event.kind === "call_started") {
       void this.loadVoiceParticipants();
     }
@@ -331,7 +331,7 @@ export class ChatRoom extends LitElement {
     if (event.username === this.username) return;
 
     this._typingUsers.add(event.username);
-    this._typingUsers = new Set(this._typingUsers); // trigger re-render
+    this._typingUsers = new Set(this._typingUsers);
     this.emitTypingUsers();
 
     const existingTimer = this.typingTimers.get(event.username);
@@ -341,7 +341,7 @@ export class ChatRoom extends LitElement {
 
     const newTimer = setTimeout(() => {
       this._typingUsers.delete(event.username);
-      this._typingUsers = new Set(this._typingUsers); // trigger re-render
+      this._typingUsers = new Set(this._typingUsers);
       this.emitTypingUsers();
       this.typingTimers.delete(event.username);
     }, 1500);
@@ -351,8 +351,6 @@ export class ChatRoom extends LitElement {
 
   private handleLoadingChange(isLoading: boolean) {
     this.isLoadingHistory = isLoading;
-    // After history load completes, the first incoming user message from WS replay
-    // is treated as the "last seen" boundary anchor.
     if (!isLoading) {
       this.awaitingFirstReplayMessage = true;
     }
@@ -794,5 +792,11 @@ export class ChatRoom extends LitElement {
         ` : nothing}
       </section>
     `;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "chat-room": ChatRoom;
   }
 }
