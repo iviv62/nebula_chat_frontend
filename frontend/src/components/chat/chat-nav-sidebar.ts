@@ -1,3 +1,4 @@
+import { ThemeController } from "../../utils/theme-controller";
 import { LitElement, html, unsafeCSS } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import chatNavSidebarStylesRaw from "../../styles/chat-nav-sidebar.styles.scss?inline";
@@ -5,6 +6,7 @@ import { navigate } from "../../utils/navigate";
 
 @customElement("chat-nav-sidebar")
 export class ChatNavSidebar extends LitElement {
+  themeCtrl = new ThemeController(this);
   @property()
   currentUsername = "";
 

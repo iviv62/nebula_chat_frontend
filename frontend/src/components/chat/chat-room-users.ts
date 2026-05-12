@@ -1,9 +1,11 @@
+import { ThemeController } from "../../utils/theme-controller";
 import { LitElement, html, unsafeCSS } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import chatRoomUsersStylesRaw from "../../styles/chat-room-users.styles.scss?inline";
 
 @customElement("chat-room-users")
 export class ChatRoomUsers extends LitElement {
+  themeCtrl = new ThemeController(this);
   @property({ type: Array })
   users: string[] = [];
 
