@@ -9,7 +9,6 @@ import type { TypingEvent } from "../../features/lib/chat/chat-message-adapter";
 import {
   addMessageReaction,
   fetchUnreadCount,
-  fetchVoiceParticipants,
   type VoiceParticipant,
   removeMessageReaction,
   uploadChatImage,
@@ -69,7 +68,7 @@ export class ChatRoom extends LitElement {
   private isAutoScrolling = false;
   private readonly seenMessageIds = new Set<string>();
 
-  // ── Voice / WebRTC ───────────────────────────────────────────────────────
+  // Voice / WebRTC
   @state() private _voiceState: 'idle' | 'calling' | 'active' | 'error' = 'idle';
   @state() private _voiceParticipants: VoiceParticipant[] = [];
   @state() private _isScreenSharing = false;
@@ -134,7 +133,6 @@ export class ChatRoom extends LitElement {
     this.updateAdapterIdentity();
     this.controller.start();
     void this.loadUnreadCountSnapshot();
-    void this.loadVoiceParticipants();
     ThemeController.set(this.themeCtrl.theme);
   }
 
@@ -148,7 +146,6 @@ export class ChatRoom extends LitElement {
   updated(changedProperties: PropertyValues) {
     if (changedProperties.has("roomId") || changedProperties.has("username")) {
       this.updateAdapterIdentity();
-      if (changedProperties.has("roomId")) void this.loadVoiceParticipants();
     }
     if (changedProperties.has("messages")) this.handleMessagesUpdated();
   }
@@ -158,11 +155,6 @@ export class ChatRoom extends LitElement {
   private updateAdapterIdentity(): void {
     this.controller.updateIdentity({ room: this.roomId, username: this.username });
     this.webrtc.updateIdentity(this.roomId, this.username);
-  }
-
-  private async loadVoiceParticipants() {
-    try { this._voiceParticipants = await fetchVoiceParticipants(this.roomId); }
-    catch { /* ignore */ }
   }
 
   private async loadUnreadCountSnapshot() {
@@ -223,7 +215,7 @@ export class ChatRoom extends LitElement {
     if (!isLoading) this.awaitingFirstReplayMessage = true;
   }
 
-  // ── Voice call handlers ──────────────────────────────────────────────────
+  // Voice call handlers
   private handleVoiceStart = () => {
     this._viewingActiveCall = true;
     this._isMuted = false;
@@ -262,7 +254,7 @@ export class ChatRoom extends LitElement {
     }
   }
 
-  // ── Scroll helpers ───────────────────────────────────────────────────────
+  // Scroll helpers
   private handleMessagesUpdated() {
     this.applyPendingScrollEffect();
     this.applyUnreadFallbackFromSnapshot();
