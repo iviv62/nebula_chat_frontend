@@ -83,8 +83,8 @@ export class ChatSettingsModal extends LitElement {
               </div>
             </div>
 
-            <div class="setting-row" style="flex-direction: column; align-items: flex-start;">
-              <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 10px;">
+            <div class="setting-row diagnostics-row">
+              <div class="diagnostics-header">
                 <span class="setting-label">Media Diagnostics</span>
                 <div class="setting-control">
                   <button @click=${this.runDiagnostics} ?disabled=${this.isRunningDiagnostics}>
@@ -94,17 +94,17 @@ export class ChatSettingsModal extends LitElement {
               </div>
 
               ${this.diagnosticsResult ? html`
-                <div style="background: rgba(0,0,0,0.1); padding: 10px; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 14px;">
+                <div class="diagnostics-result-box">
                   ${this.diagnosticsResult.success ? html`
-                    <div style="color: #10b981; font-weight: bold; margin-bottom: 8px;">✅ Devices Working Properly</div>
-                    <ul style="margin: 0; padding-left: 20px;">
+                    <div class="diagnostics-success-title">✅ Devices Working Properly</div>
+                    <ul class="diagnostics-list">
                       ${this.diagnosticsResult.devices.map(d => html`
                         <li>${d.label || d.kind} (${d.kind})</li>
                       `)}
                     </ul>
                   ` : html`
-                    <div style="color: #ef4444; font-weight: bold; margin-bottom: 8px;">❌ Diagnostics Failed</div>
-                    <p style="margin: 0;">${this.diagnosticsResult.error}</p>
+                    <div class="diagnostics-error-title">❌ Diagnostics Failed</div>
+                    <p class="diagnostics-error-message">${this.diagnosticsResult.error}</p>
                   `}
                 </div>
               ` : nothing}

@@ -164,8 +164,8 @@ export class ChatActiveCall extends LitElement {
         </div>
 
         ${this.connectionMetrics ? html`
-          <div class="active-call__metrics" style="position: absolute; top: 70px; right: 20px; background: rgba(0,0,0,0.7); color: #fff; padding: 10px; border-radius: 8px; font-size: 12px; z-index: 50; pointer-events: none;">
-            <div style="font-weight: bold; margin-bottom: 4px; color: #10b981;">Connection</div>
+          <div class="active-call__metrics">
+            <div class="active-call__metrics-title">Connection</div>
             <div>Ping: ${this.connectionMetrics.latencyMs} ms</div>
             <div>Loss: ${this.connectionMetrics.packetLossPct}%</div>
             <div>BW: ${this.connectionMetrics.bandwidthMbps} Mbps</div>
