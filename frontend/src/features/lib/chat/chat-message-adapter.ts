@@ -1,12 +1,17 @@
 import type { ChatMessage, UiMessage } from "../../../types/message";
 import { getApiBaseUrl } from "./chat-config";
 
-export type TypingEvent = { username: string; room: string };
+export type TypingEvent = { username: string; room: string; event: "started" | "stopped" };
 
 export function extractTypingEvent(payload: any): TypingEvent | null {
-  if (payload?.type !== "typing" || payload?.event !== "started") return null;
+  if (payload?.type !== "typing") return null;
+  if (payload.event !== "started" && payload.event !== "stopped") return null;
   if (!payload.username) return null;
-  return { username: String(payload.username), room: String(payload.room ?? "") };
+  return {
+    username: String(payload.username),
+    room: String(payload.room ?? ""),
+    event: payload.event,
+  };
 }
 
 export type PresenceUpdate =
@@ -65,7 +70,10 @@ function resolveImageUrl(url?: string): string | undefined {
   try {
     return new URL(url).toString();
   } catch {
-    const apiBase = getApiBaseUrl(import.meta.env.VITE_API_BASE_URL, import.meta.env.VITE_WS_BASE_URL);
+    const apiBase = getApiBaseUrl(
+      import.meta.env.VITE_API_BASE_URL,
+      import.meta.env.VITE_WS_BASE_URL,
+    );
     return new URL(url, `${apiBase}/`).toString();
   }
 }
@@ -147,7 +155,10 @@ export function extractPresenceUpdate(payload: any): PresenceUpdate | null {
 
   if (payload.event === "snapshot") {
     const users = Array.isArray(payload.users)
-      ? payload.users.filter((u: any) => typeof u === "string").map((u: string) => u.trim()).filter(Boolean)
+      ? payload.users
+          .filter((u: any) => typeof u === "string")
+          .map((u: string) => u.trim())
+          .filter(Boolean)
       : [];
 
     return {
