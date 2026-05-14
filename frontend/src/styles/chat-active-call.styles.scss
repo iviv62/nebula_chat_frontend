@@ -1,23 +1,36 @@
+/* ============================================================
+   ACTIVE CALL — consumes --gl-* tokens from chat-app (host)
+   Dark:  Glassmorphism Dark  ·  Light: Luminous Glass
+   ============================================================ */
+
 .active-call {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: #111827; // dark bg matching image
+  /* Level 0 canvas — same as lobby */
+  background: var(--gl-canvas);
+  background-image:
+    radial-gradient(ellipse 70% 50% at 20% 15%, rgba(77,142,255,0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 80% 80%, rgba(78,222,163,0.04) 0%, transparent 50%);
   z-index: 50;
   display: flex;
   flex-direction: column;
-  color: #9ca3af;
+  color: var(--gl-text-muted);
   font-family: inherit;
 }
 
+/* ---- Header ---- */
 .active-call__header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--gl-panel);
+  backdrop-filter: var(--gl-blur-1);
+  -webkit-backdrop-filter: var(--gl-blur-1);
+  border-bottom: 1px solid var(--gl-border);
 }
 
 .active-call__header-left {
@@ -27,7 +40,7 @@
 }
 
 .active-call__header-title {
-  color: #9ca3af;
+  color: var(--gl-text-muted);
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.05em;
@@ -42,25 +55,24 @@
 .active-call__timer {
   font-family: monospace;
   font-size: 0.85rem;
-  color: #6b7280;
+  color: var(--gl-text-faint);
   letter-spacing: 0.05em;
 }
 
 .active-call__icon-btn {
   background: transparent;
   border: none;
-  color: #6b7280;
+  color: var(--gl-text-faint);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  
-  &:hover {
-    color: #e5e7eb;
-  }
+
+  &:hover { color: var(--gl-text); }
 }
 
+/* ---- Grid ---- */
 .active-call__grid {
   flex: 1;
   display: grid;
@@ -76,12 +88,15 @@
   }
 }
 
+/* ---- Screen share ---- */
 .active-call__screen-share {
   margin: 0 1rem 1rem;
   padding: 0.9rem;
-  border-radius: 14px;
-  background: #0f172a;
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: var(--gl-r-lg);
+  background: var(--gl-panel);
+  backdrop-filter: var(--gl-blur-2);
+  -webkit-backdrop-filter: var(--gl-blur-2);
+  border: 1px solid var(--gl-border);
 }
 
 .active-call__screen-share-header {
@@ -94,7 +109,7 @@
 
 .active-call__screen-share-label {
   margin: 0;
-  color: #d1d5db;
+  color: var(--gl-text);
   font-size: 0.85rem;
   font-weight: 600;
 }
@@ -102,18 +117,21 @@
 .active-call__screen-fullscreen-btn {
   width: 32px;
   height: 32px;
-  border-radius: 10px;
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  background: rgba(30, 41, 59, 0.7);
-  color: #cbd5e1;
+  border-radius: var(--gl-r-md);
+  border: 1px solid var(--gl-border);
+  background: var(--gl-panel-high);
+  backdrop-filter: var(--gl-blur-1);
+  -webkit-backdrop-filter: var(--gl-blur-1);
+  color: var(--gl-text-muted);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: background 0.18s, color 0.18s;
 
   &:hover:not(:disabled) {
-    background: rgba(51, 65, 85, 0.85);
-    color: #f1f5f9;
+    background: var(--gl-panel-hover);
+    color: var(--gl-text);
   }
 
   &:disabled {
@@ -126,7 +144,7 @@
   display: flex;
   align-items: center;
   gap: 0.55rem;
-  color: #cbd5e1;
+  color: var(--gl-text-muted);
   font-size: 0.82rem;
   margin-bottom: 0.55rem;
 }
@@ -135,8 +153,8 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  border: 2px solid rgba(148, 163, 184, 0.35);
-  border-top-color: #38bdf8;
+  border: 2px solid var(--gl-border);
+  border-top-color: var(--gl-primary-cta);
   animation: active-call-spin 0.9s linear infinite;
 }
 
@@ -144,8 +162,8 @@
   display: block;
   width: 100%;
   max-height: 38vh;
-  border-radius: 12px;
-  background: #020617;
+  border-radius: var(--gl-r-md);
+  background: var(--gl-canvas);
   object-fit: contain;
 }
 
@@ -153,18 +171,27 @@
   to { transform: rotate(360deg); }
 }
 
+/* ---- Participant cards ---- */
 .active-call__card {
-  background: #1f2937;
-  border-radius: 12px;
+  background: var(--gl-panel);
+  backdrop-filter: var(--gl-blur-1);
+  -webkit-backdrop-filter: var(--gl-blur-1);
+  border: 1px solid var(--gl-border);
+  border-radius: var(--gl-r-lg);
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   aspect-ratio: 4/3;
   overflow: hidden;
-  border: 2px solid transparent; // for active speaker border
+  transition: background 0.18s;
 
-  // Solo card: smaller avatar
+  /* Active speaker: primary glow border */
+  &--speaking {
+    border-color: var(--gl-primary-cta);
+    box-shadow: 0 0 0 1px var(--gl-primary-cta), 0 0 16px rgba(77,142,255,0.18);
+  }
+
   &:only-child .active-call__avatar {
     width: 80px;
     height: 80px;
@@ -183,13 +210,17 @@
 .active-call__avatar {
   width: 120px;
   height: 120px;
-  border-radius: 50%;
+  border-radius: var(--gl-r-full);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 2.5rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--gl-text);
+  background: var(--gl-panel-high);
+  border: 2px solid var(--gl-border);
+  /* Cutout outline matching canvas */
+  outline: 2px solid var(--gl-canvas);
 }
 
 .active-call__card-controls {
@@ -201,10 +232,13 @@
 }
 
 .active-call__badge {
-  background: #111827;
-  color: #e5e7eb;
+  background: var(--gl-panel);
+  backdrop-filter: var(--gl-blur-1);
+  -webkit-backdrop-filter: var(--gl-blur-1);
+  border: 1px solid var(--gl-border);
+  color: var(--gl-text);
   padding: 0.25rem 0.6rem;
-  border-radius: 6px;
+  border-radius: var(--gl-r-sm);
   font-size: 0.8rem;
   font-weight: 600;
   display: flex;
@@ -214,10 +248,11 @@
 
 .active-call__badge-you {
   font-size: 0.6rem;
-  color: #9ca3af;
+  color: var(--gl-text-faint);
   font-weight: 500;
 }
 
+/* ---- Toolbar ---- */
 .active-call__toolbar {
   display: flex;
   justify-content: center;
@@ -229,43 +264,47 @@
 .active-call__toolbar-center {
   display: flex;
   align-items: center;
-  background: #1f2937;
+  background: var(--gl-panel);
+  backdrop-filter: var(--gl-blur-2);
+  -webkit-backdrop-filter: var(--gl-blur-2);
+  border: 1px solid var(--gl-border);
   padding: 0.5rem;
-  border-radius: 16px;
+  border-radius: var(--gl-r-xl);
   gap: 0.5rem;
 }
 
 .active-call__toolbar-btn {
   width: 48px;
   height: 48px;
-  border-radius: 12px;
+  border-radius: var(--gl-r-md);
   background: transparent;
   border: none;
-  color: #9ca3af;
+  color: var(--gl-text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.18s, color 0.18s;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: #f3f4f6;
+    background: var(--gl-panel-hover);
+    color: var(--gl-text);
   }
 
   &--active {
-    background: rgba(59, 130, 246, 0.18);
-    color: #93c5fd;
-    box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.35);
+    background: rgba(77, 142, 255, 0.15);
+    color: var(--gl-primary);
+    box-shadow: inset 0 0 0 1px rgba(77, 142, 255, 0.35);
   }
 
   &--end {
-    background: #ef4444;
-    color: white;
+    background: var(--gl-error-solid);
+    color: #ffffff;
+    border-radius: var(--gl-r-md);
 
     &:hover {
-      background: #dc2626;
-      color: white;
+      filter: brightness(1.15);
+      color: #ffffff;
     }
   }
 }
@@ -273,7 +312,7 @@
 .active-call__toolbar-divider {
   width: 1px;
   height: 24px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--gl-border);
   margin: 0 0.5rem;
 }
 
@@ -284,14 +323,18 @@
   gap: 1rem;
 }
 
+/* ---- Metrics overlay ---- */
 .active-call__metrics {
   position: absolute;
   top: 70px;
   right: 20px;
-  background: rgba(0, 0, 0, 0.7);
-  color: #ffffff;
+  background: var(--gl-panel-high);
+  backdrop-filter: var(--gl-blur-2);
+  -webkit-backdrop-filter: var(--gl-blur-2);
+  border: 1px solid var(--gl-border);
+  color: var(--gl-text);
   padding: 10px;
-  border-radius: 8px;
+  border-radius: var(--gl-r-md);
   font-size: 12px;
   z-index: 50;
   pointer-events: none;
@@ -300,5 +343,5 @@
 .active-call__metrics-title {
   font-weight: bold;
   margin-bottom: 4px;
-  color: #10b981;
+  color: var(--gl-tertiary);
 }
