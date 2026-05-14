@@ -1,6 +1,7 @@
 /* ============================================================
-   LOBBY — Glassmorphism Dark Theme
-   Design system: Inter · midnight navy canvas · glass panels
+   LOBBY — Glassmorphism Theme
+   Dark:  Glassmorphism Dark  ·  Light: Luminous Glass
+   Design system: Inter · glass panels · backdrop-blur depth
    ============================================================ */
 
 /* ---------- Font ---------- */
@@ -90,22 +91,67 @@ chat-app {
   box-sizing: border-box;
 }
 
-/* ---------- Light mode overrides ---------- */
+/* ============================================================
+   LIGHT MODE — Luminous Glass
+   ============================================================ */
 @mixin light-vars {
-  --gl-canvas:       #f0f4f8;
-  --gl-panel:        rgba(255,255,255,0.75);
-  --gl-panel-hover:  rgba(255,255,255,0.92);
-  --gl-panel-high:   rgba(248,250,252,0.85);
-  --gl-card:         rgba(255,255,255,0.60);
-  --gl-input-bg:     rgba(241,245,249,0.90);
-  --gl-border:       rgba(0,0,0,0.08);
-  --gl-border-faint: rgba(0,0,0,0.04);
-  --gl-text:         #1e293b;
-  --gl-text-muted:   #475569;
-  --gl-text-faint:   #94a3b8;
-  --gl-primary-cta:  #2563eb;
-  --gl-primary-hover:#1d4ed8;
-  --gl-on-primary:   #fff;
+  /* Canvas & surfaces */
+  --gl-canvas:        #ffffff;                   /* surface-container-lowest */
+  --gl-surface-low:   #f2f3fd;                   /* surface-container-low    */
+  --gl-surface:       #ecedf7;                   /* surface-container        */
+  --gl-surface-high:  #e6e7f2;                   /* surface-container-high   */
+  --gl-surface-top:   #e1e2ec;                   /* surface-container-highest*/
+  --gl-surface-bright:#f9f9ff;                   /* surface-bright           */
+
+  /* Glass panel fills */
+  --gl-panel:         rgba(236, 237, 247, 0.72); /* surface-container @ 72%  */
+  --gl-panel-hover:   rgba(236, 237, 247, 0.90);
+  --gl-panel-high:    rgba(230, 231, 242, 0.82); /* surface-container-high   */
+  --gl-card:          rgba(242, 243, 253, 0.68); /* surface-container-low    */
+  --gl-input-bg:      rgba(225, 226, 236, 0.80); /* surface-container-highest — sunken */
+
+  /* Borders — light glass edges */
+  --gl-border:        rgba(0, 0, 0, 0.08);       /* outline-variant approx   */
+  --gl-border-faint:  rgba(0, 0, 0, 0.04);
+  --gl-border-focus:  rgba(0, 88, 190, 0.50);    /* primary                  */
+
+  /* Typography */
+  --gl-text:          #191b23;                   /* on-surface               */
+  --gl-text-muted:    #424754;                   /* on-surface-variant       */
+  --gl-text-faint:    #727785;                   /* outline                  */
+
+  /* Primary (deep blue) */
+  --gl-primary:       #0058be;                   /* primary                  */
+  --gl-primary-cta:   #2170e4;                   /* primary-container — CTA  */
+  --gl-primary-hover: #004fa8;                   /* primary darker           */
+  --gl-on-primary:    #ffffff;                   /* on-primary               */
+
+  /* Secondary */
+  --gl-secondary:     #565e74;                   /* secondary                */
+  --gl-secondary-bg:  #dae2fd;                   /* secondary-container      */
+
+  /* Tertiary / Online / Public — warm amber */
+  --gl-tertiary:      #924700;                   /* tertiary                 */
+  --gl-tertiary-bg:   rgba(146, 71, 0, 0.10);
+
+  /* Error / Alert */
+  --gl-error:         #ba1a1a;                   /* error                    */
+  --gl-error-bg:      rgba(186, 26, 26, 0.08);
+  --gl-error-solid:   #93000a;                   /* on-error-container       */
+
+  /* Outline */
+  --gl-outline:       #727785;                   /* outline                  */
+  --gl-outline-var:   #c2c6d6;                   /* outline-variant          */
+
+  /* Blur levels — same depths, lighter tint */
+  --gl-blur-1: blur(16px);
+  --gl-blur-2: blur(20px);
+
+  /* Background canvas gradient — light ambient */
+  background-color: var(--gl-canvas);
+  background-image:
+    radial-gradient(ellipse 80% 60% at 15% 5%,  rgba(33, 112, 228, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 85% 85%,  rgba(146, 71, 0, 0.04)   0%, transparent 55%);
 }
 
 [data-theme="light"] chat-app { @include light-vars; }
@@ -271,10 +317,10 @@ chat-app {
   }
 
   &--active {
-    background: rgba(77, 142, 255, 0.20);
+    background: rgba(33, 112, 228, 0.12);
     border-color: var(--gl-primary-cta);
     color: var(--gl-primary);
-    box-shadow: 0 0 0 1px rgba(77,142,255,0.25);
+    box-shadow: 0 0 0 1px rgba(33,112,228,0.20);
   }
 
   &--add {
@@ -312,8 +358,8 @@ chat-app {
   cursor: pointer;
   transition: background 0.15s;
 
-  &:hover { background: rgba(255,255,255,0.03); }
-  &--selected { background: rgba(77,142,255,0.09); }
+  &:hover { background: rgba(0,0,0,0.03); }
+  &--selected { background: rgba(33,112,228,0.08); }
 }
 
 .lobby__dm-avatar {
@@ -465,8 +511,8 @@ chat-app {
   width: 44px;
   height: 44px;
   border-radius: var(--gl-r-md);
-  background: rgba(77,142,255,0.18);
-  border: 1px solid rgba(77,142,255,0.25);
+  background: rgba(33, 112, 228, 0.12);
+  border: 1px solid rgba(33, 112, 228, 0.20);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -548,17 +594,17 @@ chat-app {
   transition: background 0.15s, border-color 0.15s, color 0.15s;
 
   &:hover {
-    background: rgba(255,255,255,0.05);
+    background: rgba(0,0,0,0.04);
     color: var(--gl-text);
   }
 
   &--active {
-    background: rgba(77,142,255,0.18);
-    border-color: rgba(77,142,255,0.40);
+    background: rgba(33, 112, 228, 0.12);
+    border-color: rgba(33, 112, 228, 0.35);
     color: var(--gl-primary);
 
     &:hover {
-      background: rgba(77,142,255,0.26);
+      background: rgba(33, 112, 228, 0.18);
     }
   }
 }
@@ -608,8 +654,8 @@ chat-app {
     background: transparent;
     transition: background 0.12s;
 
-    &:hover { background: rgba(255,255,255,0.03); }
-    &.selected { background: rgba(77,142,255,0.07); }
+    &:hover { background: rgba(0,0,0,0.02); }
+    &.selected { background: rgba(33,112,228,0.06); }
     &:last-child { border-bottom: none; }
   }
 }
@@ -632,8 +678,8 @@ chat-app {
   width: 34px;
   height: 34px;
   border-radius: var(--gl-r-md);
-  background: rgba(77,142,255,0.18);
-  border: 1px solid rgba(77,142,255,0.22);
+  background: rgba(33, 112, 228, 0.12);
+  border: 1px solid rgba(33, 112, 228, 0.18);
   color: var(--gl-primary);
   display: flex;
   align-items: center;
@@ -692,17 +738,16 @@ chat-app {
   &--public {
     color: var(--gl-tertiary);
     background: var(--gl-tertiary-bg);
-    border: 1px solid rgba(78,222,163,0.20);
+    border: 1px solid rgba(146,71,0,0.20);
   }
 
   &--private {
     color: var(--gl-text-muted);
-    background: rgba(255,255,255,0.04);
+    background: rgba(0,0,0,0.04);
     border: 1px solid var(--gl-border);
   }
 }
 
-/* Status dot inside status (12px circle w/ cutout) */
 .lobby__status--public svg,
 .lobby__status--private svg {
   flex-shrink: 0;
@@ -723,7 +768,7 @@ chat-app {
   border-radius: var(--gl-r-full);
   background: var(--gl-error-solid);
   border: 1px solid var(--gl-error);
-  color: var(--gl-error);
+  color: #fff;
   font-size: 10px;
   font-weight: 700;
   line-height: 16px;
@@ -754,7 +799,8 @@ chat-app {
 
   &:focus {
     border-color: var(--gl-border-focus);
-    background: rgba(12,14,22,0.90);
+    background: var(--gl-input-bg);
+    filter: brightness(0.96);
   }
 }
 
@@ -774,10 +820,10 @@ chat-app {
 
   &:disabled { opacity: 0.40; cursor: not-allowed; }
 
-  /* Primary — solid electric blue */
+  /* Primary — solid blue */
   &--create {
     background: var(--gl-primary-cta);
-    color: #fff;
+    color: var(--gl-on-primary);
     padding: 9px 20px;
     &:hover:not(:disabled) { background: var(--gl-primary-hover); }
   }
@@ -785,7 +831,7 @@ chat-app {
   /* Join — primary */
   &--join {
     background: var(--gl-primary-cta);
-    color: #fff;
+    color: var(--gl-on-primary);
     padding: 5px 14px;
     font-size: 12px;
     border-radius: var(--gl-r-md);
@@ -794,7 +840,7 @@ chat-app {
 
   &--join-sm {
     background: var(--gl-primary-cta);
-    color: #fff;
+    color: var(--gl-on-primary);
     padding: 4px 12px;
     font-size: 12px;
     border-radius: var(--gl-r-md);
@@ -803,32 +849,32 @@ chat-app {
 
   /* Delete — ghost error */
   &--delete {
-    background: rgba(255,180,171,0.08);
+    background: var(--gl-error-bg);
     color: var(--gl-error);
-    border: 1px solid rgba(255,180,171,0.25);
+    border: 1px solid rgba(186,26,26,0.25);
     padding: 5px 12px;
     font-size: 12px;
     border-radius: var(--gl-r-md);
-    &:hover { background: rgba(255,180,171,0.14); }
+    &:hover { background: rgba(186,26,26,0.14); }
   }
 
   /* Logout — ghost secondary */
   &--logout {
-    background: rgba(255,255,255,0.05);
+    background: rgba(0,0,0,0.04);
     color: var(--gl-text-muted);
-    border: 1px solid rgba(255,255,255,0.15);
+    border: 1px solid rgba(0,0,0,0.12);
     padding: 7px 16px;
     backdrop-filter: var(--gl-blur-1);
     -webkit-backdrop-filter: var(--gl-blur-1);
     &:hover {
-      background: rgba(255,255,255,0.09);
+      background: rgba(0,0,0,0.08);
       color: var(--gl-text);
     }
   }
 }
 
 .lobby__refresh-btn {
-  background: rgba(255,255,255,0.04);
+  background: rgba(0,0,0,0.03);
   border: 1px solid var(--gl-border);
   border-radius: var(--gl-r-md);
   padding: 5px 10px;
@@ -841,7 +887,7 @@ chat-app {
   gap: 5px;
   transition: background 0.15s;
 
-  &:hover:not(:disabled) { background: rgba(255,255,255,0.08); color: var(--gl-text-muted); }
+  &:hover:not(:disabled) { background: rgba(0,0,0,0.06); color: var(--gl-text-muted); }
   &:disabled { opacity: 0.40; cursor: not-allowed; }
 }
 
