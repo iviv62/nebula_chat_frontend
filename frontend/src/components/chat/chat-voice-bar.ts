@@ -9,7 +9,8 @@ export class ChatVoiceBar extends LitElement {
   @property({ type: Array }) participants: VoiceParticipant[] = [];
   @property() username = "";
   @property({ type: Boolean }) isMuted = false;
-  
+  @property({ type: Number }) callDuration = 0;
+
   @state() private timer = "00:00";
   private intervalId: ReturnType<typeof setInterval> | null = null;
   private callStartTime = 0;
@@ -27,6 +28,14 @@ export class ChatVoiceBar extends LitElement {
   }
 
   updated(changedProperties: Map<string, any>) {
+    if (changedProperties.has("callDuration") && this.state === "active") {
+      this.callStartTime = Date.now() - this.callDuration * 1000;
+      const diff = this.callDuration;
+      const minutes = String(Math.floor(diff / 60)).padStart(2, "0");
+      const seconds = String(diff % 60).padStart(2, "0");
+      this.timer = `${minutes}:${seconds}`;
+    }
+
     if (changedProperties.has("state")) {
       if (this.state === "active") {
         this.startTimer();
@@ -38,7 +47,7 @@ export class ChatVoiceBar extends LitElement {
 
   private startTimer() {
     if (this.intervalId) return;
-    this.callStartTime = Date.now();
+    this.callStartTime = Date.now() - this.callDuration * 1000;
     this.intervalId = setInterval(() => {
       const diff = Math.floor((Date.now() - this.callStartTime) / 1000);
       const minutes = String(Math.floor(diff / 60)).padStart(2, "0");
@@ -63,12 +72,14 @@ export class ChatVoiceBar extends LitElement {
     const colors = ["#f59e0b", "#3b82f6", "#a855f7", "#ec4899", "#10b981", "#ef4444"];
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
-        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
     return colors[Math.abs(hash) % colors.length];
   }
 
-  createRenderRoot() { return this; }
+  createRenderRoot() {
+    return this;
+  }
 
   render() {
     if (this.state === "idle") return nothing;
@@ -83,44 +94,104 @@ export class ChatVoiceBar extends LitElement {
     const partsArray = Array.from(uniqueParticipants.values());
 
     return html`
-      <div 
-        class="voice-bar voice-bar--${this.state}" 
+      <div
+        class="voice-bar voice-bar--${this.state}"
         style="display: flex; align-items: center; background-color: #10b981; color: white; padding: 12px 16px; justify-content: space-between;"
       >
         <div style="display: flex; align-items: center; gap: 16px;">
           <!-- Avatars -->
           <div style="display: flex; align-items: center;">
-            ${partsArray.slice(0, 3).map((p, i) => html`
-              <div 
-                style="width: 32px; height: 32px; border-radius: 50%; background-color: ${this.getColorForUser(p.username)}; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; border: 2px solid #10b981; margin-left: ${i > 0 ? '-12px' : '0'}; z-index: ${3 - i};"
-              >
-                ${this.getInitials(p.username).charAt(0)}
-              </div>
-            `)}
-            ${partsArray.length > 3 ? html`
-              <div 
-                style="width: 32px; height: 32px; border-radius: 50%; background-color: rgba(255,255,255,0.2); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; border: 2px solid #10b981; margin-left: -12px; z-index: 0;"
-              >
-                +${partsArray.length - 3}
-              </div>
-            ` : nothing}
+            ${partsArray
+              .slice(0, 3)
+              .map(
+                (p, i) => html`
+                  <div
+                    style="width: 32px; height: 32px; border-radius: 50%; background-color: ${this.getColorForUser(
+                      p.username,
+                    )}; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; border: 2px solid #10b981; margin-left: ${i >
+                    0
+                      ? "-12px"
+                      : "0"}; z-index: ${3 - i};"
+                  >
+                    ${this.getInitials(p.username).charAt(0)}
+                  </div>
+                `,
+              )}
+            ${partsArray.length > 3
+              ? html`
+                  <div
+                    style="width: 32px; height: 32px; border-radius: 50%; background-color: rgba(255,255,255,0.2); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; border: 2px solid #10b981; margin-left: -12px; z-index: 0;"
+                  >
+                    +${partsArray.length - 3}
+                  </div>
+                `
+              : nothing}
           </div>
 
-          <span class="voice-bar__label" style="font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px;">
-            ${this.state === "calling" ? "VOICE CONNECTING..." : this.state === "error" ? "⚠ CALL FAILED" : html`VOICE CONNECTED / ${this.timer}`}
-            ${this.state === "active" ? html`
-              <button 
-                style="background: ${this.isMuted ? '#ef4444' : 'transparent'}; border: none; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 2px;"
-                title=${this.isMuted ? "Unmute" : "Mute"}
-                @click=${() => this.dispatchEvent(new CustomEvent("voice-mute-toggle", { detail: { muted: !this.isMuted }, bubbles: true, composed: true }))}
-              >
-                ${this.isMuted ? html`
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-                ` : html`
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-                `}
-              </button>
-            ` : nothing}
+          <span
+            class="voice-bar__label"
+            style="font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px;"
+          >
+            ${this.state === "calling"
+              ? "VOICE CONNECTING..."
+              : this.state === "error"
+                ? "⚠ CALL FAILED"
+                : html`VOICE CONNECTED / ${this.timer}`}
+            ${this.state === "active"
+              ? html`
+                  <button
+                    style="background: ${this.isMuted
+                      ? "#ef4444"
+                      : "transparent"}; border: none; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 2px;"
+                    title=${this.isMuted ? "Unmute" : "Mute"}
+                    @click=${() =>
+                      this.dispatchEvent(
+                        new CustomEvent("voice-mute-toggle", {
+                          detail: { muted: !this.isMuted },
+                          bubbles: true,
+                          composed: true,
+                        }),
+                      )}
+                  >
+                    ${this.isMuted
+                      ? html`
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                            <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path>
+                            <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path>
+                            <line x1="12" y1="19" x2="12" y2="23"></line>
+                            <line x1="8" y1="23" x2="16" y2="23"></line>
+                          </svg>
+                        `
+                      : html`
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                            <line x1="12" y1="19" x2="12" y2="23"></line>
+                            <line x1="8" y1="23" x2="16" y2="23"></line>
+                          </svg>
+                        `}
+                  </button>
+                `
+              : nothing}
           </span>
         </div>
 
@@ -130,17 +201,34 @@ export class ChatVoiceBar extends LitElement {
           style="background-color: rgba(0,0,0,0.1); border: none; color: white; padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: background-color 0.2s;"
           onmouseover="this.style.backgroundColor='rgba(0,0,0,0.2)'"
           onmouseout="this.style.backgroundColor='rgba(0,0,0,0.1)'"
-          @click=${() => this.dispatchEvent(
-            new CustomEvent(
-              this.state === "error" ? "voice-dismiss" : "return-to-call",
-              { bubbles: true, composed: true }
-            )
-          )}
+          @click=${() =>
+            this.dispatchEvent(
+              new CustomEvent(this.state === "error" ? "voice-dismiss" : "return-to-call", {
+                bubbles: true,
+                composed: true,
+              }),
+            )}
         >
-          ${this.state === "error" ? "DISMISS" : html`
-            RETURN TO CALL
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M21 3l-7 7"></path><path d="M3 21l7-7"></path></svg>
-          `}
+          ${this.state === "error"
+            ? "DISMISS"
+            : html`
+                RETURN TO CALL
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M15 3h6v6"></path>
+                  <path d="M9 21H3v-6"></path>
+                  <path d="M21 3l-7 7"></path>
+                  <path d="M3 21l7-7"></path>
+                </svg>
+              `}
         </button>
       </div>
     `;
@@ -148,5 +236,7 @@ export class ChatVoiceBar extends LitElement {
 }
 
 declare global {
-  interface HTMLElementTagNameMap { "chat-voice-bar": ChatVoiceBar; }
+  interface HTMLElementTagNameMap {
+    "chat-voice-bar": ChatVoiceBar;
+  }
 }

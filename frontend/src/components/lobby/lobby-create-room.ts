@@ -3,7 +3,9 @@ import { customElement, property, state } from "lit/decorators.js";
 
 @customElement("lobby-create-room")
 export class LobbyCreateRoom extends LitElement {
-  createRenderRoot() { return this; }
+  createRenderRoot() {
+    return this;
+  }
 
   @property() error = "";
   @state() private newRoomName = "";
@@ -11,10 +13,13 @@ export class LobbyCreateRoom extends LitElement {
   private handleSubmit(e: Event) {
     e.preventDefault();
     if (!this.newRoomName.trim()) return;
-    this.dispatchEvent(new CustomEvent("create-room", {
-      detail: this.newRoomName.trim(),
-      bubbles: true, composed: true
-    }));
+    this.dispatchEvent(
+      new CustomEvent("create-room", {
+        detail: this.newRoomName.trim(),
+        bubbles: true,
+        composed: true,
+      }),
+    );
     this.newRoomName = "";
   }
 

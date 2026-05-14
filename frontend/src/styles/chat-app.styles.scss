@@ -29,12 +29,14 @@ chat-app {
   min-height: 100vh;
   width: 100%;
   background-color: var(--bg-color);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   color: var(--text-primary);
   padding: 2rem;
   box-sizing: border-box;
 }
-
 
 @mixin dark-theme-vars {
   --bg-color: #0f172a;
@@ -99,7 +101,9 @@ chat-app {
     cursor: pointer;
     font-size: 0.9rem;
     transition: all 0.2s;
-    &:hover { background: var(--item-hover); }
+    &:hover {
+      background: var(--item-hover);
+    }
   }
 
   /* 3-column grid */
@@ -171,7 +175,9 @@ chat-app {
     overflow-y: auto;
     max-height: 260px;
 
-    &::-webkit-scrollbar { width: 5px; }
+    &::-webkit-scrollbar {
+      width: 5px;
+    }
     &::-webkit-scrollbar-thumb {
       background: var(--border-color);
       border-radius: 3px;
@@ -189,7 +195,9 @@ chat-app {
     font-weight: 500;
     transition: all 0.15s;
 
-    &:hover { background: var(--item-hover); }
+    &:hover {
+      background: var(--item-hover);
+    }
 
     &--selected {
       background: var(--item-selected-bg);
@@ -253,8 +261,13 @@ chat-app {
     color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.2s;
-    &:hover:not(:disabled) { background: var(--item-hover); }
-    &:disabled { opacity: 0.5; cursor: not-allowed; }
+    &:hover:not(:disabled) {
+      background: var(--item-hover);
+    }
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   }
 
   &__table-wrapper {
@@ -270,7 +283,8 @@ chat-app {
     border-collapse: collapse;
     font-size: 0.875rem;
 
-    th, td {
+    th,
+    td {
       padding: 0.65rem 1rem;
       text-align: left;
     }
@@ -289,10 +303,18 @@ chat-app {
       cursor: pointer;
       background: var(--table-row-1);
 
-      &:nth-child(even) { background: var(--table-row-2); }
-      &:hover { background: var(--table-row-hover); }
-      &.selected { background: var(--item-selected-bg); }
-      &:last-child { border-bottom: none; }
+      &:nth-child(even) {
+        background: var(--table-row-2);
+      }
+      &:hover {
+        background: var(--table-row-hover);
+      }
+      &.selected {
+        background: var(--item-selected-bg);
+      }
+      &:last-child {
+        border-bottom: none;
+      }
     }
   }
 
@@ -350,12 +372,17 @@ chat-app {
     transition: background 0.2s;
     font-size: 0.9rem;
 
-    &:disabled { opacity: 0.5; cursor: not-allowed; }
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
 
     &--dark {
       background: var(--btn-dark-bg);
       color: var(--btn-dark-text);
-      &:hover:not(:disabled) { background: var(--btn-dark-hover); }
+      &:hover:not(:disabled) {
+        background: var(--btn-dark-hover);
+      }
     }
 
     &--full {
@@ -369,7 +396,9 @@ chat-app {
       padding: 0.35rem 0.9rem;
       font-size: 0.8rem;
       border-radius: 4px;
-      &:hover:not(:disabled) { background: var(--btn-primary-hover); }
+      &:hover:not(:disabled) {
+        background: var(--btn-primary-hover);
+      }
     }
 
     &--delete {
@@ -380,7 +409,9 @@ chat-app {
       font-size: 0.8rem;
       border-radius: 4px;
       margin-left: 0.35rem;
-      &:hover { background: #fee2e2; }
+      &:hover {
+        background: #fee2e2;
+      }
 
       &-sm {
         padding: 0.2rem 0.6rem;
@@ -407,6 +438,7 @@ chat-app {
   .lobby__layout {
     grid-template-columns: 1fr;
   }
-  .lobby__col--aside { display: none; }
+  .lobby__col--aside {
+    display: none;
+  }
 }
-

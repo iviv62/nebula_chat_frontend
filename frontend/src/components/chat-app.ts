@@ -160,13 +160,17 @@ export class ChatApp extends LitElement {
     if (!token) return;
 
     try {
-      await subscribeToRoomNotifications({ username, roomId: targetRoomId, token, provider: "fcm" });
+      await subscribeToRoomNotifications({
+        username,
+        roomId: targetRoomId,
+        token,
+        provider: "fcm",
+      });
       this.subscribedRooms.add(key);
     } catch (error) {
       console.error("Failed to subscribe to room notifications", error);
     }
   }
-
 
   private renderUnreadBadge(roomId: string) {
     const unread = this.unreadByRoom[roomId] ?? 0;
@@ -174,12 +178,14 @@ export class ChatApp extends LitElement {
     return html`<span class="lobby__unread-badge">${unread}</span>`;
   }
 
-
   private async handleCreateRoomFromChild(roomName: string) {
     const trimmed = roomName.trim();
     if (!trimmed) return;
     try {
-      const room = await createRoom({ name: trimmed, created_by: this.username.trim() || undefined });
+      const room = await createRoom({
+        name: trimmed,
+        created_by: this.username.trim() || undefined,
+      });
       await this.loadRooms();
       this.selectedRoomId = room.id;
       this.error = "";
@@ -231,179 +237,213 @@ export class ChatApp extends LitElement {
 
   render() {
     const filteredRooms = this.rooms.filter((r) =>
-      r.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+      r.name.toLowerCase().includes(this.searchQuery.toLowerCase()),
     );
 
     return html`
       <div class="lobby">
-          <!-- Top Header Bar -->
-          <lobby-header .theme=${this.themeCtrl.theme} @toggle-theme=${this.toggleTheme}></lobby-header>
+        <!-- Top Header Bar -->
+        <lobby-header
+          .theme=${this.themeCtrl.theme}
+          @toggle-theme=${this.toggleTheme}
+        ></lobby-header>
 
-          <!-- Three-column layout -->
-          <div class="lobby__layout">
-
-            <!-- Column 1: Signed-In User + Recent Rooms -->
-            <div class="lobby__col">
-              <div class="lobby__card">
-                <h3 class="lobby__card-title">Signed In User</h3>
-                <div class="lobby__label">Username</div>
-                <div class="lobby__room-card-name">${this.username || "-"}</div>
-              </div>
-
-              <div class="lobby__card">
-                <h3 class="lobby__card-title">Recent Rooms</h3>
-                <div class="lobby__room-cards">
-                  ${this.rooms.length === 0 && !this.isLoadingRooms
-                    ? html`<p class="lobby__empty">No rooms yet</p>`
-                    : repeat(
-                        this.rooms.slice(0, 5),
-                        (r) => r.id,
-                        (r) => html`
-                          <div
-                            class="lobby__room-card ${this.selectedRoomId === r.id ? "lobby__room-card--selected" : ""}"
-                            @click=${() => {
-                              this.selectedRoomId = r.id;
-                            }}
-                          >
-                            <div class="lobby__room-card-head">
-                              <div class="lobby__room-card-name">${r.name}</div>
-                              ${this.renderUnreadBadge(r.id)}
-                            </div>
-                            <div class="lobby__room-card-preview">${this.renderLastMessagePreview(r.id)}</div>
-                            ${r.created_by ? html`<div class="lobby__room-card-creator">by ${r.created_by}</div>` : ""}
-                          </div>
-                        `
-                      )}
-                </div>
-              </div>
-
-              ${this.username.trim() ? (() => {
-                const myRooms = this.rooms.filter(r => r.created_by === this.username.trim());
-                return html`
-                  <div class="lobby__card">
-                    <h3 class="lobby__card-title">My Rooms</h3>
-                    <div class="lobby__room-cards">
-                      ${myRooms.length === 0
-                        ? html`<p class="lobby__empty">You haven't created any rooms yet</p>`
-                        : repeat(
-                            myRooms,
-                            (r) => r.id,
-                            (r) => html`
-                              <div
-                                class="lobby__room-card ${this.selectedRoomId === r.id ? "lobby__room-card--selected" : ""}"
-                                @click=${() => {
-                                  this.selectedRoomId = r.id;
-                                }}
-                              >
-                                <div class="lobby__room-card-head">
-                                  <div class="lobby__room-card-name">${r.name}</div>
-                                  ${this.renderUnreadBadge(r.id)}
-                                </div>
-                                <div class="lobby__room-card-preview">${this.renderLastMessagePreview(r.id)}</div>
-                                <div class="lobby__room-card-actions">
-                                  <button
-                                    class="lobby__btn lobby__btn--delete lobby__btn--delete-sm"
-                                    @click=${(e: Event) => this.handleDeleteRoom(r, e)}
-                                  >Delete</button>
-                                </div>
-                              </div>
-                            `
-                          )}
-                    </div>
-                  </div>
-                `;
-              })() : ""}
+        <!-- Three-column layout -->
+        <div class="lobby__layout">
+          <!-- Column 1: Signed-In User + Recent Rooms -->
+          <div class="lobby__col">
+            <div class="lobby__card">
+              <h3 class="lobby__card-title">Signed In User</h3>
+              <div class="lobby__label">Username</div>
+              <div class="lobby__room-card-name">${this.username || "-"}</div>
             </div>
 
-            <!-- Column 2: Create Room + Room Finder -->
-            <div class="lobby__col">
-              <lobby-create-room 
-                .error=${this.error}
-                @create-room=${(e: CustomEvent) => this.handleCreateRoomFromChild(e.detail)}>
-              </lobby-create-room>
+            <div class="lobby__card">
+              <h3 class="lobby__card-title">Recent Rooms</h3>
+              <div class="lobby__room-cards">
+                ${this.rooms.length === 0 && !this.isLoadingRooms
+                  ? html`<p class="lobby__empty">No rooms yet</p>`
+                  : repeat(
+                      this.rooms.slice(0, 5),
+                      (r) => r.id,
+                      (r) => html`
+                        <div
+                          class="lobby__room-card ${this.selectedRoomId === r.id
+                            ? "lobby__room-card--selected"
+                            : ""}"
+                          @click=${() => {
+                            this.selectedRoomId = r.id;
+                          }}
+                        >
+                          <div class="lobby__room-card-head">
+                            <div class="lobby__room-card-name">${r.name}</div>
+                            ${this.renderUnreadBadge(r.id)}
+                          </div>
+                          <div class="lobby__room-card-preview">
+                            ${this.renderLastMessagePreview(r.id)}
+                          </div>
+                          ${r.created_by
+                            ? html`<div class="lobby__room-card-creator">by ${r.created_by}</div>`
+                            : ""}
+                        </div>
+                      `,
+                    )}
+              </div>
+            </div>
 
-              <div class="lobby__card">
-                <div class="lobby__finder-header">
-                  <h3 class="lobby__card-title" style="margin-bottom: 0;">Room Finder</h3>
-                  <button
-                    class="lobby__refresh-btn"
-                    @click=${this.loadRooms}
-                    ?disabled=${this.isLoadingRooms}
-                  >
-                    ${this.isLoadingRooms ? "⏳" : "↻ Refresh"}
-                  </button>
-                </div>
+            ${this.username.trim()
+              ? (() => {
+                  const myRooms = this.rooms.filter((r) => r.created_by === this.username.trim());
+                  return html`
+                    <div class="lobby__card">
+                      <h3 class="lobby__card-title">My Rooms</h3>
+                      <div class="lobby__room-cards">
+                        ${myRooms.length === 0
+                          ? html`<p class="lobby__empty">You haven't created any rooms yet</p>`
+                          : repeat(
+                              myRooms,
+                              (r) => r.id,
+                              (r) => html`
+                                <div
+                                  class="lobby__room-card ${this.selectedRoomId === r.id
+                                    ? "lobby__room-card--selected"
+                                    : ""}"
+                                  @click=${() => {
+                                    this.selectedRoomId = r.id;
+                                  }}
+                                >
+                                  <div class="lobby__room-card-head">
+                                    <div class="lobby__room-card-name">${r.name}</div>
+                                    ${this.renderUnreadBadge(r.id)}
+                                  </div>
+                                  <div class="lobby__room-card-preview">
+                                    ${this.renderLastMessagePreview(r.id)}
+                                  </div>
+                                  <div class="lobby__room-card-actions">
+                                    <button
+                                      class="lobby__btn lobby__btn--delete lobby__btn--delete-sm"
+                                      @click=${(e: Event) => this.handleDeleteRoom(r, e)}
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                </div>
+                              `,
+                            )}
+                      </div>
+                    </div>
+                  `;
+                })()
+              : ""}
+          </div>
 
-                <input
-                  class="lobby__input lobby__search-input"
-                  type="text"
-                  placeholder="🔍 Search..."
-                  .value=${this.searchQuery}
-                  @input=${(e: Event) => (this.searchQuery = (e.target as HTMLInputElement).value)}
-                />
+          <!-- Column 2: Create Room + Room Finder -->
+          <div class="lobby__col">
+            <lobby-create-room
+              .error=${this.error}
+              @create-room=${(e: CustomEvent) => this.handleCreateRoomFromChild(e.detail)}
+            >
+            </lobby-create-room>
 
-                <div class="lobby__table-wrapper">
-                  <table class="lobby__table">
-                    <thead>
-                      <tr>
-                        <th>Room Name</th>
-                        <th>Participants</th>
-                        <th>Status</th>
-                        <th>Join Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${this.isLoadingRooms
-                        ? html`<tr><td colspan="4" class="lobby__table-empty">Loading rooms...</td></tr>`
-                        : filteredRooms.length === 0
-                        ? html`<tr><td colspan="4" class="lobby__table-empty">No rooms found.</td></tr>`
+            <div class="lobby__card">
+              <div class="lobby__finder-header">
+                <h3 class="lobby__card-title" style="margin-bottom: 0;">Room Finder</h3>
+                <button
+                  class="lobby__refresh-btn"
+                  @click=${this.loadRooms}
+                  ?disabled=${this.isLoadingRooms}
+                >
+                  ${this.isLoadingRooms ? "⏳" : "↻ Refresh"}
+                </button>
+              </div>
+
+              <input
+                class="lobby__input lobby__search-input"
+                type="text"
+                placeholder="🔍 Search..."
+                .value=${this.searchQuery}
+                @input=${(e: Event) => (this.searchQuery = (e.target as HTMLInputElement).value)}
+              />
+
+              <div class="lobby__table-wrapper">
+                <table class="lobby__table">
+                  <thead>
+                    <tr>
+                      <th>Room Name</th>
+                      <th>Participants</th>
+                      <th>Status</th>
+                      <th>Join Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${this.isLoadingRooms
+                      ? html`<tr>
+                          <td colspan="4" class="lobby__table-empty">Loading rooms...</td>
+                        </tr>`
+                      : filteredRooms.length === 0
+                        ? html`<tr>
+                            <td colspan="4" class="lobby__table-empty">No rooms found.</td>
+                          </tr>`
                         : repeat(
                             filteredRooms,
                             (r) => r.id,
                             (r) => html`
-                              <tr class="${this.selectedRoomId === r.id ? "selected" : ""}" @click=${() => {
-                                this.selectedRoomId = r.id;
-                              }}>
+                              <tr
+                                class="${this.selectedRoomId === r.id ? "selected" : ""}"
+                                @click=${() => {
+                                  this.selectedRoomId = r.id;
+                                }}
+                              >
                                 <td>
                                   <div class="lobby__room-main-head">
                                     <div class="lobby__room-main">${r.name}</div>
                                     ${this.renderUnreadBadge(r.id)}
                                   </div>
-                                  <div class="lobby__room-preview">${this.renderLastMessagePreview(r.id)}</div>
-                                  ${r.created_by ? html`<div class="lobby__room-creator">by ${r.created_by}</div>` : ""}
+                                  <div class="lobby__room-preview">
+                                    ${this.renderLastMessagePreview(r.id)}
+                                  </div>
+                                  ${r.created_by
+                                    ? html`<div class="lobby__room-creator">
+                                        by ${r.created_by}
+                                      </div>`
+                                    : ""}
                                 </td>
                                 <td>👥 ${r.participants?.label || "0/50"}</td>
                                 <td>
-                                  ${r.status === "password"
-                                    ? html`🔒 Password`
-                                    : html`🌐 Public`}
+                                  ${r.status === "password" ? html`🔒 Password` : html`🌐 Public`}
                                 </td>
                                 <td>
                                   <button
                                     class="lobby__btn lobby__btn--join"
                                     ?disabled=${!this.username.trim()}
-                                    @click=${(e: Event) => { e.stopPropagation(); this.joinRoom(r); }}
-                                  >Join</button>
+                                    @click=${(e: Event) => {
+                                      e.stopPropagation();
+                                      this.joinRoom(r);
+                                    }}
+                                  >
+                                    Join
+                                  </button>
                                   ${r.created_by && r.created_by === this.username.trim()
                                     ? html`<button
                                         class="lobby__btn lobby__btn--delete"
                                         @click=${(e: Event) => this.handleDeleteRoom(r, e)}
-                                      >Delete</button>`
+                                      >
+                                        Delete
+                                      </button>`
                                     : ""}
                                 </td>
                               </tr>
-                            `
+                            `,
                           )}
-                    </tbody>
-                  </table>
-                </div>
+                  </tbody>
+                </table>
               </div>
             </div>
-
-            <!-- Column 3: Reserved / Future use -->
-            <div class="lobby__col lobby__col--aside"></div>
-
           </div>
+
+          <!-- Column 3: Reserved / Future use -->
+          <div class="lobby__col lobby__col--aside"></div>
+        </div>
       </div>
     `;
   }

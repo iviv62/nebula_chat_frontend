@@ -75,6 +75,7 @@ export class ChatRoom extends LitElement {
 
   // Voice / WebRTC
   @state() private _voiceState: "idle" | "calling" | "active" | "error" = "idle";
+  @state() private _voiceDuration = 0;
   @state() private _voiceParticipants: VoiceParticipant[] = [];
   @state() private _isScreenSharing = false;
   @state() private _screenSharingUser: string | null = null;
@@ -121,6 +122,9 @@ export class ChatRoom extends LitElement {
         onVoiceSignal: (payload) => this.controller.sendRawSignal(payload),
         onConnectionMetrics: (metrics) => {
           this._connectionMetrics = metrics;
+        },
+        onCallDuration: (duration) => {
+          this._voiceDuration = duration;
         },
       },
     );
@@ -222,6 +226,7 @@ export class ChatRoom extends LitElement {
 
   private resetVoiceUiState() {
     this._voiceParticipants = [];
+    this._voiceDuration = 0;
     this._screenSharingUser = null;
     this._screenShareStream = null;
     this._isScreenSharing = false;
@@ -585,6 +590,7 @@ export class ChatRoom extends LitElement {
                   .callState=${this._voiceState}
                   .roomName=${this.roomName}
                   .username=${this.username}
+                  .callDuration=${this._voiceDuration}
                   .participants=${this._voiceParticipants}
                   .isMuted=${this._isMuted}
                   .isScreenSharing=${this._isScreenSharing}
@@ -602,6 +608,7 @@ export class ChatRoom extends LitElement {
                 <chat-voice-bar
                   .state=${this._voiceState}
                   .participants=${this._voiceParticipants}
+                  .callDuration=${this._voiceDuration}
                   .username=${this.username}
                   .isMuted=${this._isMuted}
                   @return-to-call=${this.handleReturnToCall}

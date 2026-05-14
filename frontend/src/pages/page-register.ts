@@ -45,13 +45,31 @@ export class PageRegister extends LitElement {
 
           <form @submit=${this.handleSubmit}>
             <div class="form-group">
-              <input type="text" name="username" placeholder="Username" required autocomplete="username" />
+              <input
+                type="text"
+                name="username"
+                placeholder="Username"
+                required
+                autocomplete="username"
+              />
             </div>
             <div class="form-group">
-              <input type="email" name="email" placeholder="Email Address" required autocomplete="email" />
+              <input
+                type="email"
+                name="email"
+                placeholder="Email Address"
+                required
+                autocomplete="email"
+              />
             </div>
             <div class="form-group">
-              <input type="password" name="password" placeholder="Password" required autocomplete="new-password" />
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                required
+                autocomplete="new-password"
+              />
             </div>
             <button type="submit" ?disabled=${this.loading}>
               ${this.loading ? "Registering…" : "Register"}
