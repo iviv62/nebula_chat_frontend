@@ -141,9 +141,8 @@ export class ChatRoom extends LitElement {
       onReconnectChange: (isReconnecting) => (this.isReconnecting = isReconnecting),
       onMessageAck: (clientId, serverId) => {
         // Replace the temp clientId-based message with the confirmed server id
-        // and flip status to 'sent'. The subsequent broadcast from the server
-        // will be deduplicated by seenMessageIds using the real serverId.
-        this.seenMessageIds.add(serverId);
+        // and flip status to 'sent'. The broadcast dedup is handled by
+        // ackedServerIds in the controller — no need to touch seenMessageIds here.
         this.messages = this.messages.map((m) =>
           m.clientId === clientId
             ? { ...m, id: serverId, clientId: undefined, status: "sent" as const }
@@ -570,7 +569,9 @@ export class ChatRoom extends LitElement {
       return;
     }
 
-    // Append optimistic message immediately — visible before server round-trip
+    // Append optimistic message immediately — visible before server round-trip.
+    // Do NOT pre-register clientMsgId in seenMessageIds here; trackIncomingUserMessage
+    // handles that on the first call. Broadcast dedup is owned by the controller.
     const optimisticMsg: UiMessage = {
       id: clientMsgId,
       clientId: clientMsgId,
@@ -582,8 +583,6 @@ export class ChatRoom extends LitElement {
       reactions: {},
       status: "pending",
     };
-    // Register the temp id so dedup logic doesn't block it
-    this.seenMessageIds.add(clientMsgId);
     this.addMessage(optimisticMsg);
   }
 
