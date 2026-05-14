@@ -143,6 +143,7 @@ export class ChatRoom extends LitElement {
         // Replace the temp clientId-based message with the confirmed server id
         // and flip status to 'sent'. The broadcast dedup is handled by
         // ackedServerIds in the controller — no need to touch seenMessageIds here.
+        console.log(`[ChatRoom] onMessageAck — clientId=${clientId} serverId=${serverId}`);
         this.messages = this.messages.map((m) =>
           m.clientId === clientId
             ? { ...m, id: serverId, clientId: undefined, status: "sent" as const }
@@ -443,6 +444,7 @@ export class ChatRoom extends LitElement {
   }
 
   private addMessage(msg: UiMessage) {
+    console.log(`[ChatRoom] addMessage — id=${msg.id} kind=${msg.kind} from=${msg.username} status=${(msg as { status?: string }).status ?? 'n/a'}`);
     const isNearBottom = this.isMessagesNearBottom();
     if (msg.kind === "user") {
       if (!this.trackIncomingUserMessage(msg, isNearBottom)) return;
@@ -460,6 +462,7 @@ export class ChatRoom extends LitElement {
   }
 
   private trackIncomingUserMessage(message: UiMessage, isNearBottom: boolean): boolean {
+    console.log(`[ChatRoom] trackIncomingUserMessage — id=${message.id} seenAlready=${this.seenMessageIds.has(message.id)}`);
     if (this.seenMessageIds.has(message.id)) return false;
     this.seenMessageIds.add(message.id);
     const isOwnMessage = message.username === this.username;
@@ -583,6 +586,7 @@ export class ChatRoom extends LitElement {
       reactions: {},
       status: "pending",
     };
+    console.log(`[ChatRoom] adding optimistic message — clientId=${clientMsgId}`);
     this.addMessage(optimisticMsg);
   }
 

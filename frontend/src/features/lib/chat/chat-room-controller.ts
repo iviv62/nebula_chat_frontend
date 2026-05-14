@@ -170,6 +170,7 @@ export class ChatRoomController {
       clearTimeout(timer);
       this.pendingAcks.delete(clientMsgId);
     }
+    console.log(`[Controller] ack received — clientId=${clientMsgId} serverId=${serverMsgId}`);
     // Register the real server id so we can drop the subsequent broadcast
     this.ackedServerIds.add(serverMsgId);
     this.options.onMessageAck?.(clientMsgId, serverMsgId);
@@ -285,10 +286,13 @@ export class ChatRoomController {
       if (!chatMessage) return;
       const uiMessage = toUiMessage(chatMessage);
 
+      console.log(`[Controller] message received — id=${uiMessage.id} from=${uiMessage.username} ackedIds=[${[...this.ackedServerIds].join(', ')}]`);
+
       // ─ deduplication: drop the server broadcast of our own optimistic message.
       //   handleAck() registered the serverId synchronously before this frame can
       //   arrive, so this check is always reliable regardless of Lit render timing.
       if (this.ackedServerIds.has(uiMessage.id)) {
+        console.log(`[Controller] deduped own broadcast — id=${uiMessage.id}`);
         this.ackedServerIds.delete(uiMessage.id);
         this.lastSeen = uiMessage.createdAt;
         this.scheduleSeenSync();
@@ -297,6 +301,7 @@ export class ChatRoomController {
 
       if (uiMessage.username.trim()) { this.activeUsers.add(uiMessage.username.trim()); this.emitPresence(); }
       this.lastSeen = uiMessage.createdAt;
+      console.log(`[Controller] forwarding message to UI — id=${uiMessage.id}`);
       this.options.onMessage(uiMessage);
       this.scheduleSeenSync();
     };
