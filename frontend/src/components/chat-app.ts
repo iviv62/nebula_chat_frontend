@@ -1,7 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
-import "../styles/chat-app.styles.scss"; // Standard Vite import (compiles to global CSS)
+import "../styles/chat-app.styles.scss";
 import "./lobby/lobby-header";
 import "./lobby/lobby-create-room";
 import {
@@ -22,41 +22,41 @@ import { navigate } from "../utils/navigate";
 import type { Room } from "../types/room";
 import type { ConversationSummary } from "../types/conversation-summary";
 
+const TRENDING_ROOMS = [
+  { name: "Gaming Hub",   icon: "🎮" },
+  { name: "Tech Talk",    icon: "💬" },
+  { name: "Music Lounge", icon: "🎵" },
+];
+
+const CATEGORIES = ["All", "Gaming", "Tech", "Music", "Social", "Learning"];
+
 @customElement("chat-app")
 export class ChatApp extends LitElement {
-  // Opt out of Shadow DOM so the compiled CSS applies directly to this component
-  createRenderRoot() {
-    return this;
-  }
+  createRenderRoot() { return this; }
 
   @property() username = "";
   @state() private selectedRoomId = "";
-
   @state() private rooms: Room[] = [];
   @state() private conversationByRoom: Record<string, ConversationSummary> = {};
   @state() private unreadByRoom: Record<string, number> = {};
-  // newRoomName state moved to <lobby-create-room>
   @state() private searchQuery = "";
+  @state() private activeCategory = "All";
   @state() private isLoadingRooms = true;
   @state() private error = "";
 
   private themeCtrl = new ThemeController(this);
-
   private unreadLoadRequestId = 0;
   private notificationRegistrationByUser: Record<string, boolean> = {};
   private subscribedRooms = new Set<string>();
 
   async connectedCallback() {
     super.connectedCallback();
-
     ThemeController.set(this.themeCtrl.theme);
-
     await this.loadRooms();
   }
 
   protected updated(changedProperties: Map<PropertyKey, unknown>): void {
     super.updated(changedProperties);
-
     if (changedProperties.has("username")) {
       void this.loadUnreadCountsForUser(this.username);
       this.subscribedRooms.clear();
@@ -74,14 +74,12 @@ export class ChatApp extends LitElement {
     try {
       const rooms = await fetchRooms();
       this.rooms = rooms;
-
       const summaryResults = await Promise.allSettled(
         rooms.map(async (room) => {
           const summary = await fetchConversationSummary(room.id);
           return [room.id, summary] as const;
         }),
       );
-
       const byRoom: Record<string, ConversationSummary> = {};
       for (const result of summaryResults) {
         if (result.status === "fulfilled") {
@@ -90,10 +88,7 @@ export class ChatApp extends LitElement {
         }
       }
       this.conversationByRoom = byRoom;
-
       await this.loadUnreadCountsForUser(this.username);
-
-      // Auto-select the first room if available and none selected yet
       if (this.rooms.length > 0 && !this.selectedRoomId) {
         this.selectedRoomId = this.rooms[0].id;
       }
@@ -106,24 +101,15 @@ export class ChatApp extends LitElement {
 
   private async loadUnreadCountsForUser(username: string) {
     const trimmed = username.trim();
-    if (!trimmed || this.rooms.length === 0) {
-      this.unreadByRoom = {};
-      return;
-    }
-
+    if (!trimmed || this.rooms.length === 0) { this.unreadByRoom = {}; return; }
     const requestId = ++this.unreadLoadRequestId;
-
     const unreadResults = await Promise.allSettled(
       this.rooms.map(async (room) => {
         const unread = await fetchUnreadCount(room.id, trimmed);
         return [room.id, unread] as const;
       }),
     );
-
-    if (requestId !== this.unreadLoadRequestId) {
-      return;
-    }
-
+    if (requestId !== this.unreadLoadRequestId) return;
     const byRoom: Record<string, number> = {};
     for (const result of unreadResults) {
       if (result.status === "fulfilled") {
@@ -137,7 +123,6 @@ export class ChatApp extends LitElement {
   private async registerPushForUser(username: string) {
     const trimmed = username.trim();
     if (!trimmed || this.notificationRegistrationByUser[trimmed]) return;
-
     try {
       await initFirebasePushAndRegister(trimmed);
       this.notificationRegistrationByUser[trimmed] = true;
@@ -150,15 +135,11 @@ export class ChatApp extends LitElement {
     const username = this.username.trim();
     const targetRoomId = roomId.trim();
     if (!username || !targetRoomId) return;
-
-    // Already subscribed to this room — backend handles dedup but avoid extra calls.
     const key = `${username}:${targetRoomId}`;
     if (this.subscribedRooms.has(key)) return;
-
     await this.registerPushForUser(username);
     const token = getCurrentPushToken();
     if (!token) return;
-
     try {
       await subscribeToRoomNotifications({ username, roomId: targetRoomId, token, provider: "fcm" });
       this.subscribedRooms.add(key);
@@ -167,13 +148,11 @@ export class ChatApp extends LitElement {
     }
   }
 
-
   private renderUnreadBadge(roomId: string) {
     const unread = this.unreadByRoom[roomId] ?? 0;
     if (!this.username.trim() || unread <= 0) return null;
     return html`<span class="lobby__unread-badge">${unread}</span>`;
   }
-
 
   private async handleCreateRoomFromChild(roomName: string) {
     const trimmed = roomName.trim();
@@ -206,9 +185,7 @@ export class ChatApp extends LitElement {
     if (!confirm(`Delete room "${room.name}"? This cannot be undone.`)) return;
     try {
       await deleteRoom(room.id, this.username.trim());
-      if (this.selectedRoomId === room.id) {
-        this.selectedRoomId = "";
-      }
+      if (this.selectedRoomId === room.id) this.selectedRoomId = "";
       await this.loadRooms();
     } catch (error) {
       if (error instanceof ApiError && error.status === 403) {
@@ -229,181 +206,252 @@ export class ChatApp extends LitElement {
     return `${summary.last_message_username}: ${summary.last_message_text}`;
   }
 
-  render() {
-    const filteredRooms = this.rooms.filter((r) =>
+  private getFilteredRooms() {
+    return this.rooms.filter((r) =>
       r.name.toLowerCase().includes(this.searchQuery.toLowerCase())
     );
+  }
 
+  private getRoomInitial(name: string) {
+    return name.trim().charAt(0).toUpperCase() || "#";
+  }
+
+  private renderTrendingRooms() {
+    return TRENDING_ROOMS.map((tr) => {
+      const match = this.rooms.find((r) => r.name.toLowerCase().includes(tr.name.toLowerCase()));
+      return html`
+        <div class="lobby__trending-card">
+          <div class="lobby__trending-icon">${tr.icon}</div>
+          <div class="lobby__trending-info">
+            <div class="lobby__trending-name">${tr.name}</div>
+            <div class="lobby__trending-participants">Participants</div>
+            <div class="lobby__trending-count">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              ${match ? (match.participants?.label ?? "0/50") : "0/50"}
+            </div>
+          </div>
+          <button
+            class="lobby__btn lobby__btn--join-sm"
+            ?disabled=${!this.username.trim()}
+            @click=${() => match && this.joinRoom(match)}
+          >Join</button>
+        </div>
+      `;
+    });
+  }
+
+  private renderRoomFinderTable() {
+    const filtered = this.getFilteredRooms();
+    if (this.isLoadingRooms) {
+      return html`<tr><td colspan="4" class="lobby__table-empty">Loading rooms…</td></tr>`;
+    }
+    if (filtered.length === 0) {
+      return html`<tr><td colspan="4" class="lobby__table-empty">No rooms found.</td></tr>`;
+    }
+    return repeat(
+      filtered,
+      (r) => r.id,
+      (r) => {
+        const unread = this.unreadByRoom[r.id] ?? 0;
+        const isOwner = r.created_by && r.created_by === this.username.trim();
+        return html`
+          <tr
+            class="${this.selectedRoomId === r.id ? "selected" : ""}"
+            @click=${() => { this.selectedRoomId = r.id; }}
+          >
+            <td>
+              <div class="lobby__room-row">
+                <div class="lobby__room-avatar">${this.getRoomInitial(r.name)}</div>
+                <div class="lobby__room-row-info">
+                  <div class="lobby__room-row-name">
+                    ${r.name}
+                    ${unread > 0 && this.username.trim()
+                      ? html`<span class="lobby__unread-badge">${unread}</span>`
+                      : null}
+                  </div>
+                  <div class="lobby__room-row-preview">${this.renderLastMessagePreview(r.id)}</div>
+                  ${r.created_by ? html`<div class="lobby__room-creator">admin: ${r.created_by}</div>` : ""}
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="lobby__participants-cell">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                ${r.participants?.label ?? "0/50"}
+              </div>
+            </td>
+            <td>
+              ${r.status === "password"
+                ? html`<span class="lobby__status lobby__status--private"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Private</span>`
+                : html`<span class="lobby__status lobby__status--public"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg> Public</span>`}
+            </td>
+            <td>
+              <div class="lobby__action-cell">
+                <button
+                  class="lobby__btn lobby__btn--join"
+                  ?disabled=${!this.username.trim()}
+                  @click=${(e: Event) => { e.stopPropagation(); this.joinRoom(r); }}
+                >Join</button>
+                ${isOwner
+                  ? html`<button
+                      class="lobby__btn lobby__btn--delete"
+                      @click=${(e: Event) => this.handleDeleteRoom(r, e)}
+                    >Delete</button>`
+                  : ""}
+              </div>
+            </td>
+          </tr>
+        `;
+      }
+    );
+  }
+
+  render() {
     return html`
       <div class="lobby">
-          <!-- Top Header Bar -->
-          <lobby-header .theme=${this.themeCtrl.theme} @toggle-theme=${this.toggleTheme}></lobby-header>
+        <!-- Header -->
+        <lobby-header .theme=${this.themeCtrl.theme} @toggle-theme=${this.toggleTheme}></lobby-header>
 
-          <!-- Three-column layout -->
-          <div class="lobby__layout">
+        <!-- Two-column layout -->
+        <div class="lobby__layout">
 
-            <!-- Column 1: Signed-In User + Recent Rooms -->
-            <div class="lobby__col">
-              <div class="lobby__card">
-                <h3 class="lobby__card-title">Signed In User</h3>
-                <div class="lobby__label">Username</div>
-                <div class="lobby__room-card-name">${this.username || "-"}</div>
-              </div>
-
-              <div class="lobby__card">
-                <h3 class="lobby__card-title">Recent Rooms</h3>
-                <div class="lobby__room-cards">
-                  ${this.rooms.length === 0 && !this.isLoadingRooms
-                    ? html`<p class="lobby__empty">No rooms yet</p>`
-                    : repeat(
-                        this.rooms.slice(0, 5),
-                        (r) => r.id,
-                        (r) => html`
-                          <div
-                            class="lobby__room-card ${this.selectedRoomId === r.id ? "lobby__room-card--selected" : ""}"
-                            @click=${() => {
-                              this.selectedRoomId = r.id;
-                            }}
-                          >
-                            <div class="lobby__room-card-head">
-                              <div class="lobby__room-card-name">${r.name}</div>
-                              ${this.renderUnreadBadge(r.id)}
-                            </div>
-                            <div class="lobby__room-card-preview">${this.renderLastMessagePreview(r.id)}</div>
-                            ${r.created_by ? html`<div class="lobby__room-card-creator">by ${r.created_by}</div>` : ""}
-                          </div>
-                        `
-                      )}
+          <!-- Left sidebar -->
+          <aside class="lobby__sidebar">
+            <!-- Signed In User -->
+            <div class="lobby__card">
+              <h3 class="lobby__card-title">Signed In User</h3>
+              <div class="lobby__user-row">
+                <div class="lobby__user-avatar">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <div>
+                  <div class="lobby__label">Username</div>
+                  <div class="lobby__username">${this.username || "—"}</div>
                 </div>
               </div>
-
-              ${this.username.trim() ? (() => {
-                const myRooms = this.rooms.filter(r => r.created_by === this.username.trim());
-                return html`
-                  <div class="lobby__card">
-                    <h3 class="lobby__card-title">My Rooms</h3>
-                    <div class="lobby__room-cards">
-                      ${myRooms.length === 0
-                        ? html`<p class="lobby__empty">You haven't created any rooms yet</p>`
-                        : repeat(
-                            myRooms,
-                            (r) => r.id,
-                            (r) => html`
-                              <div
-                                class="lobby__room-card ${this.selectedRoomId === r.id ? "lobby__room-card--selected" : ""}"
-                                @click=${() => {
-                                  this.selectedRoomId = r.id;
-                                }}
-                              >
-                                <div class="lobby__room-card-head">
-                                  <div class="lobby__room-card-name">${r.name}</div>
-                                  ${this.renderUnreadBadge(r.id)}
-                                </div>
-                                <div class="lobby__room-card-preview">${this.renderLastMessagePreview(r.id)}</div>
-                                <div class="lobby__room-card-actions">
-                                  <button
-                                    class="lobby__btn lobby__btn--delete lobby__btn--delete-sm"
-                                    @click=${(e: Event) => this.handleDeleteRoom(r, e)}
-                                  >Delete</button>
-                                </div>
-                              </div>
-                            `
-                          )}
-                    </div>
-                  </div>
-                `;
-              })() : ""}
             </div>
 
-            <!-- Column 2: Create Room + Room Finder -->
-            <div class="lobby__col">
-              <lobby-create-room 
-                .error=${this.error}
-                @create-room=${(e: CustomEvent) => this.handleCreateRoomFromChild(e.detail)}>
-              </lobby-create-room>
-
-              <div class="lobby__card">
-                <div class="lobby__finder-header">
-                  <h3 class="lobby__card-title" style="margin-bottom: 0;">Room Finder</h3>
+            <!-- Servers -->
+            <div class="lobby__card">
+              <h3 class="lobby__card-title">Servers</h3>
+              <div class="lobby__servers">
+                ${this.rooms.slice(0, 3).map((r) => html`
                   <button
-                    class="lobby__refresh-btn"
-                    @click=${this.loadRooms}
-                    ?disabled=${this.isLoadingRooms}
-                  >
-                    ${this.isLoadingRooms ? "⏳" : "↻ Refresh"}
-                  </button>
-                </div>
-
-                <input
-                  class="lobby__input lobby__search-input"
-                  type="text"
-                  placeholder="🔍 Search..."
-                  .value=${this.searchQuery}
-                  @input=${(e: Event) => (this.searchQuery = (e.target as HTMLInputElement).value)}
-                />
-
-                <div class="lobby__table-wrapper">
-                  <table class="lobby__table">
-                    <thead>
-                      <tr>
-                        <th>Room Name</th>
-                        <th>Participants</th>
-                        <th>Status</th>
-                        <th>Join Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${this.isLoadingRooms
-                        ? html`<tr><td colspan="4" class="lobby__table-empty">Loading rooms...</td></tr>`
-                        : filteredRooms.length === 0
-                        ? html`<tr><td colspan="4" class="lobby__table-empty">No rooms found.</td></tr>`
-                        : repeat(
-                            filteredRooms,
-                            (r) => r.id,
-                            (r) => html`
-                              <tr class="${this.selectedRoomId === r.id ? "selected" : ""}" @click=${() => {
-                                this.selectedRoomId = r.id;
-                              }}>
-                                <td>
-                                  <div class="lobby__room-main-head">
-                                    <div class="lobby__room-main">${r.name}</div>
-                                    ${this.renderUnreadBadge(r.id)}
-                                  </div>
-                                  <div class="lobby__room-preview">${this.renderLastMessagePreview(r.id)}</div>
-                                  ${r.created_by ? html`<div class="lobby__room-creator">by ${r.created_by}</div>` : ""}
-                                </td>
-                                <td>👥 ${r.participants?.label || "0/50"}</td>
-                                <td>
-                                  ${r.status === "password"
-                                    ? html`🔒 Password`
-                                    : html`🌐 Public`}
-                                </td>
-                                <td>
-                                  <button
-                                    class="lobby__btn lobby__btn--join"
-                                    ?disabled=${!this.username.trim()}
-                                    @click=${(e: Event) => { e.stopPropagation(); this.joinRoom(r); }}
-                                  >Join</button>
-                                  ${r.created_by && r.created_by === this.username.trim()
-                                    ? html`<button
-                                        class="lobby__btn lobby__btn--delete"
-                                        @click=${(e: Event) => this.handleDeleteRoom(r, e)}
-                                      >Delete</button>`
-                                    : ""}
-                                </td>
-                              </tr>
-                            `
-                          )}
-                    </tbody>
-                  </table>
-                </div>
+                    class="lobby__server-icon ${this.selectedRoomId === r.id ? "lobby__server-icon--active" : ""}"
+                    title=${r.name}
+                    @click=${() => { this.selectedRoomId = r.id; }}
+                  >${this.getRoomInitial(r.name)}</button>
+                `)}
+                <button class="lobby__server-icon lobby__server-icon--add" title="Create room"
+                  @click=${() => this.renderRoot.querySelector<HTMLElement>(".lobby__create-input")?.focus()}
+                >+</button>
               </div>
             </div>
 
-            <!-- Column 3: Reserved / Future use -->
-            <div class="lobby__col lobby__col--aside"></div>
+            <!-- Direct Messages -->
+            <div class="lobby__card lobby__card--dm">
+              <h3 class="lobby__card-title">Direct Messages</h3>
+              <div class="lobby__dm-list">
+                ${this.rooms.length === 0 && !this.isLoadingRooms
+                  ? html`<p class="lobby__empty">No rooms yet</p>`
+                  : repeat(
+                      this.rooms.slice(0, 6),
+                      (r) => r.id,
+                      (r) => {
+                        const unread = this.unreadByRoom[r.id] ?? 0;
+                        const preview = this.renderLastMessagePreview(r.id);
+                        return html`
+                          <div
+                            class="lobby__dm-item ${this.selectedRoomId === r.id ? "lobby__dm-item--selected" : ""}"
+                            @click=${() => { this.selectedRoomId = r.id; }}
+                          >
+                            <div class="lobby__dm-avatar">${this.getRoomInitial(r.name)}</div>
+                            <div class="lobby__dm-info">
+                              <div class="lobby__dm-name">${r.name}</div>
+                              <div class="lobby__dm-preview">${preview}</div>
+                            </div>
+                            ${unread > 0 && this.username.trim()
+                              ? html`<span class="lobby__unread-badge">${unread}</span>`
+                              : html`<span class="lobby__dm-dot"></span>`}
+                          </div>
+                        `;
+                      }
+                    )}
+              </div>
+            </div>
+          </aside>
 
-          </div>
+          <!-- Main content -->
+          <main class="lobby__main">
+
+            <!-- Create Room banner -->
+            <lobby-create-room
+              .error=${this.error}
+              @create-room=${(e: CustomEvent) => this.handleCreateRoomFromChild(e.detail)}
+            ></lobby-create-room>
+
+            <!-- Trending Now -->
+            <section class="lobby__section">
+              <h3 class="lobby__section-title">Trending Now</h3>
+              <div class="lobby__trending">
+                ${this.renderTrendingRooms()}
+              </div>
+            </section>
+
+            <!-- Room Finder -->
+            <section class="lobby__section">
+              <div class="lobby__finder-header">
+                <h3 class="lobby__section-title" style="margin:0">Room Finder</h3>
+                <button
+                  class="lobby__refresh-btn"
+                  @click=${this.loadRooms}
+                  ?disabled=${this.isLoadingRooms}
+                >
+                  ${this.isLoadingRooms
+                    ? html`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`
+                    : html`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Refresh`}
+                </button>
+              </div>
+
+              <div class="lobby__search-row">
+                <div class="lobby__search-wrap">
+                  <svg class="lobby__search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input
+                    class="lobby__input lobby__search-input"
+                    type="text"
+                    placeholder="Search..."
+                    .value=${this.searchQuery}
+                    @input=${(e: Event) => (this.searchQuery = (e.target as HTMLInputElement).value)}
+                  />
+                </div>
+              </div>
+
+              <!-- Category filters -->
+              <div class="lobby__categories">
+                ${CATEGORIES.map((cat) => html`
+                  <button
+                    class="lobby__category-btn ${this.activeCategory === cat ? "lobby__category-btn--active" : ""}"
+                    @click=${() => (this.activeCategory = cat)}
+                  >${cat}</button>
+                `)}
+              </div>
+
+              <div class="lobby__table-wrapper">
+                <table class="lobby__table">
+                  <thead>
+                    <tr>
+                      <th>Room Name</th>
+                      <th>Participants</th>
+                      <th>Status</th>
+                      <th>Join Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>${this.renderRoomFinderTable()}</tbody>
+                </table>
+              </div>
+            </section>
+          </main>
+        </div>
       </div>
     `;
   }
