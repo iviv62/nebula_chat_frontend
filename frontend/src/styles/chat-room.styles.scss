@@ -7,7 +7,7 @@
   /* Surfaces */
   --cr-bg:                transparent;
   --cr-header-bg:         rgba(236, 237, 247, 0.55);
-  --cr-border:            var(--gl-border);
+  --cr-border:            rgba(0, 0, 0, 0.14);
   --cr-msg-area-bg:       transparent;
   --cr-composer-bg:       transparent;
 
@@ -20,11 +20,11 @@
 
   /* Composer shell */
   --cr-composer-shell-bg:     rgba(236, 237, 247, 0.72);
-  --cr-composer-shell-border: var(--gl-border);
+  --cr-composer-shell-border: rgba(0, 0, 0, 0.14);
 
   /* Input */
   --cr-input-bg:          var(--gl-input-bg);
-  --cr-input-border:      var(--gl-border);
+  --cr-input-border:      rgba(0, 0, 0, 0.14);
   --cr-input-color:       var(--gl-text);
   --cr-input-placeholder: var(--gl-text-faint);
   --cr-placeholder-color: var(--gl-text-faint);
@@ -34,8 +34,8 @@
   --cr-meta-color:        var(--gl-text-muted);
 
   /* Messages */
-  --cr-msg-other-bg:      rgba(236, 237, 247, 0.75);
-  --cr-msg-other-color:   var(--gl-text);
+  --cr-msg-other-bg:      rgba(236, 237, 247, 0.80);
+  --cr-msg-other-color:   #1a1d2e;
   --cr-msg-self-bg:       var(--gl-primary-cta);
   --cr-msg-self-color:    var(--gl-on-primary);
   --cr-msg-system-bg:     rgba(236, 237, 247, 0.60);
@@ -54,7 +54,7 @@
 
   /* Send button */
   --cr-send-icon-bg:          var(--gl-input-bg);
-  --cr-send-icon-border:      var(--gl-border);
+  --cr-send-icon-border:      rgba(0, 0, 0, 0.14);
   --cr-send-icon-color:       var(--gl-text-muted);
   --cr-send-icon-hover-bg:    var(--gl-primary-cta);
   --cr-send-icon-hover-color: var(--gl-on-primary);
@@ -63,57 +63,60 @@
 @mixin dark-tokens {
   /* Surfaces — transparent so canvas gradient shows through */
   --cr-bg:                transparent;
-  --cr-header-bg:         rgba(14, 17, 28, 0.50);
-  --cr-border:            rgba(255, 255, 255, 0.08);
+  --cr-header-bg:         rgba(12, 15, 26, 0.70);
+  /* Visible side border — clearly separates nav / sidebar from chat area */
+  --cr-border:            rgba(255, 255, 255, 0.18);
+  --cr-border-faint:      rgba(255, 255, 255, 0.09);
   --cr-msg-area-bg:       transparent;
   --cr-composer-bg:       transparent;
 
   /* Scrollbar */
-  --cr-scrollbar:         rgba(255, 255, 255, 0.15);
+  --cr-scrollbar:         rgba(255, 255, 255, 0.22);
 
   /* Call group strip */
   --cr-call-group-bg:     rgba(77, 142, 255, 0.06);
-  --cr-call-group-border: rgba(77, 142, 255, 0.18);
+  --cr-call-group-border: rgba(77, 142, 255, 0.22);
 
   /* Composer shell */
-  --cr-composer-shell-bg:     rgba(14, 17, 28, 0.55);
-  --cr-composer-shell-border: rgba(255, 255, 255, 0.10);
+  --cr-composer-shell-bg:     rgba(12, 15, 26, 0.65);
+  --cr-composer-shell-border: rgba(255, 255, 255, 0.18);
 
   /* Input */
-  --cr-input-bg:          rgba(10, 12, 20, 0.55);
-  --cr-input-border:      rgba(255, 255, 255, 0.08);
-  --cr-input-color:       var(--gl-text);
-  --cr-input-placeholder: rgba(140, 144, 159, 0.70);
-  --cr-placeholder-color: rgba(140, 144, 159, 0.70);
+  --cr-input-bg:          rgba(10, 12, 22, 0.60);
+  --cr-input-border:      rgba(255, 255, 255, 0.14);
+  --cr-input-color:       #e8e8f2;
+  --cr-input-placeholder: rgba(160, 165, 185, 0.65);
+  --cr-placeholder-color: rgba(160, 165, 185, 0.65);
 
   /* Typography */
-  --cr-title-color:       var(--gl-text);
-  --cr-meta-color:        var(--gl-text-muted);
+  --cr-title-color:       #e8e8f2;
+  --cr-meta-color:        #b0b4c8;
 
-  /* Messages */
-  --cr-msg-other-bg:      rgba(20, 24, 40, 0.55);
-  --cr-msg-other-color:   var(--gl-text);
-  --cr-msg-self-bg:       var(--gl-primary-cta);   /* #4d8eff solid blue */
+  /* Messages — raised opacity so text pops against gradient canvas */
+  --cr-msg-other-bg:      rgba(28, 34, 58, 0.88);
+  --cr-msg-other-color:   #dde0f0;          /* bright near-white, always legible */
+  --cr-msg-other-border:  rgba(255, 255, 255, 0.12);
+  --cr-msg-self-bg:       #4d8eff;          /* solid electric blue */
   --cr-msg-self-color:    #ffffff;
-  --cr-msg-system-bg:     rgba(20, 24, 40, 0.40);
-  --cr-msg-system-color:  var(--gl-text-muted);
-  --cr-author-color:      var(--gl-text-muted);
-  --cr-time-color:        rgba(140, 144, 159, 0.65);
+  --cr-msg-system-bg:     rgba(18, 22, 42, 0.70);
+  --cr-msg-system-color:  #9098b8;
+  --cr-author-color:      #9098b8;          /* visibly lighter than bubble bg */
+  --cr-time-color:        #7078a0;
 
   /* Misc */
-  --cr-banner-bg:         rgba(77, 142, 255, 0.10);
-  --cr-banner-color:      var(--gl-primary);
-  --cr-icon-btn-color:    var(--gl-text-muted);
+  --cr-banner-bg:         rgba(77, 142, 255, 0.12);
+  --cr-banner-color:      #adc6ff;
+  --cr-icon-btn-color:    #9098b8;
 
   /* Tool icons */
-  --cr-tool-icon-color:       rgba(140, 144, 159, 0.70);
-  --cr-tool-icon-hover-bg:    rgba(255, 255, 255, 0.06);
+  --cr-tool-icon-color:       #9098b8;
+  --cr-tool-icon-hover-bg:    rgba(255, 255, 255, 0.08);
 
   /* Send button */
-  --cr-send-icon-bg:          rgba(14, 17, 28, 0.55);
-  --cr-send-icon-border:      rgba(255, 255, 255, 0.10);
-  --cr-send-icon-color:       rgba(140, 144, 159, 0.70);
-  --cr-send-icon-hover-bg:    var(--gl-primary-cta);
+  --cr-send-icon-bg:          rgba(12, 15, 26, 0.60);
+  --cr-send-icon-border:      rgba(255, 255, 255, 0.16);
+  --cr-send-icon-color:       #9098b8;
+  --cr-send-icon-hover-bg:    #4d8eff;
   --cr-send-icon-hover-color: #ffffff;
 }
 
@@ -135,7 +138,8 @@
   background: var(--cr-bg);
   border-radius: 0;
   border: none;
-  border-left: 1px solid var(--cr-border);
+  /* Clearly visible side borders separating panel columns */
+  border-left:  1px solid var(--cr-border);
   border-right: 1px solid var(--cr-border);
   overflow: hidden;
   height: 100%;
@@ -196,7 +200,7 @@
     color: var(--cr-icon-btn-color);
     transition: background 0.2s, color 0.2s;
 
-    &:hover { background: rgba(255, 255, 255, 0.07); }
+    &:hover { background: rgba(255, 255, 255, 0.09); }
 
     &--active {
       color: var(--gl-error);
@@ -264,7 +268,7 @@
   &--calling {
     background: rgba(174, 160, 0, 0.12);
     border-color: rgba(174, 160, 0, 0.30);
-    color: var(--gl-text-muted);
+    color: var(--cr-meta-color);
   }
   &--active {
     background: var(--gl-tertiary-bg);
@@ -319,7 +323,7 @@
     align-self: flex-end;
     margin-top: 0.25rem;
     border: 1px solid var(--cr-border);
-    background: rgba(14, 17, 28, 0.65);
+    background: rgba(12, 15, 26, 0.80);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     color: var(--cr-title-color);
@@ -328,9 +332,9 @@
     font-weight: 600;
     padding: 0.35rem 0.75rem;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 
-    &:hover { background: rgba(20, 24, 40, 0.80); }
+    &:hover { background: rgba(20, 25, 48, 0.90); }
   }
 
   &__composer {
@@ -412,7 +416,7 @@
     padding: 0.55rem 0.75rem;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.20);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
     box-sizing: border-box;
   }
 
@@ -471,10 +475,10 @@
     padding: 0.5rem;
     border-radius: 10px;
     border: 1px solid var(--cr-border);
-    background: rgba(14, 17, 28, 0.80);
+    background: rgba(12, 15, 26, 0.88);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.30);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.40);
     z-index: 5;
 
     &::-webkit-scrollbar { width: 6px; }
@@ -498,7 +502,7 @@
     letter-spacing: 0.02em;
     text-transform: uppercase;
     color: var(--cr-meta-color);
-    background: rgba(14, 17, 28, 0.80);
+    background: rgba(12, 15, 26, 0.88);
     padding: 0.2rem 0.1rem;
   }
 
@@ -592,7 +596,7 @@
     color: var(--cr-author-color);
     margin-bottom: 0.2rem;
     margin-left: 0.25rem;
-    font-weight: 500;
+    font-weight: 600;
   }
 
   &__body {
@@ -604,7 +608,7 @@
     font-size: 0.9rem;
     line-height: 1.45;
     word-break: break-word;
-    border: 1px solid var(--cr-border);
+    border: 1px solid var(--cr-msg-other-border, rgba(255, 255, 255, 0.12));
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
   }
@@ -703,7 +707,7 @@
   &__reaction-chip {
     border: 1px solid var(--cr-border);
     border-radius: 999px;
-    background: rgba(14, 17, 28, 0.55);
+    background: rgba(12, 15, 26, 0.70);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     color: var(--cr-title-color);
@@ -715,12 +719,12 @@
     line-height: 1;
     cursor: pointer;
 
-    &:hover { background: rgba(20, 24, 40, 0.70); }
+    &:hover { background: rgba(24, 30, 56, 0.80); }
   }
 
   &__reaction-chip--active {
-    border-color: rgba(77, 142, 255, 0.45);
-    background: rgba(77, 142, 255, 0.12);
+    border-color: rgba(77, 142, 255, 0.50);
+    background: rgba(77, 142, 255, 0.14);
   }
 
   &__reaction-emoji { font-size: 0.88rem; }
@@ -763,10 +767,10 @@
     border: 1px solid var(--cr-border);
     border-radius: 10px;
     padding: 0.25rem;
-    background: rgba(14, 17, 28, 0.80);
+    background: rgba(12, 15, 26, 0.88);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.30);
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.40);
   }
 
   &__emoji {
