@@ -10,41 +10,47 @@
 /* ---------- Dark theme tokens (default) ---------- */
 chat-app {
   /* Canvas & surfaces */
-  --gl-canvas:        #0c0e16;   /* surface-container-lowest */
-  --gl-surface-low:   #191b24;   /* surface-container-low   */
-  --gl-surface:       #1d1f28;   /* surface-container       */
-  --gl-surface-high:  #282a32;   /* surface-container-high  */
-  --gl-surface-top:   #33343e;   /* surface-container-highest */
-  --gl-surface-bright:#373942;   /* surface-bright          */
+  --gl-canvas:        #0d1117;   /* deep near-black base */
+  --gl-surface-low:   #141824;
+  --gl-surface:       #181d2a;
+  --gl-surface-high:  #1f2535;
+  --gl-surface-top:   #262d3d;
+  --gl-surface-bright:#2d3347;
 
   /* Glass panel fills (semi-transparent) */
-  --gl-panel:         rgba(29, 31, 40, 0.70);
-  --gl-panel-hover:   rgba(29, 31, 40, 0.82);
-  --gl-panel-high:    rgba(40, 42, 50, 0.80);
-  --gl-card:          rgba(25, 27, 36, 0.65);
-  --gl-input-bg:      rgba(12, 14, 22, 0.75);  /* "sunken" inputs */
+  --gl-panel:         rgba(20, 24, 36, 0.55);
+  --gl-panel-hover:   rgba(30, 35, 55, 0.70);
+  --gl-panel-high:    rgba(26, 31, 46, 0.65);
+  --gl-card:          rgba(18, 22, 34, 0.50);
+  --gl-input-bg:      rgba(10, 12, 20, 0.60);
 
   /* Borders */
-  --gl-border:        rgba(255, 255, 255, 0.10);
-  --gl-border-faint:  rgba(255, 255, 255, 0.05);
+  --gl-border:        rgba(255, 255, 255, 0.09);
+  --gl-border-faint:  rgba(255, 255, 255, 0.04);
   --gl-border-focus:  rgba(77, 142, 255, 0.60);
 
   /* Typography */
-  --gl-text:          #e2e1ee;   /* on-surface      */
-  --gl-text-muted:    #c2c6d6;   /* on-surface-variant */
-  --gl-text-faint:    #8c909f;   /* outline         */
+  --gl-text:          #e2e1ee;
+  --gl-text-muted:    #c2c6d6;
+  --gl-text-faint:    #8c909f;
 
   /* Primary (electric blue) */
-  --gl-primary:       #adc6ff;   /* primary         */
-  --gl-primary-cta:   #4d8eff;   /* primary-container — solid buttons */
+  --gl-primary:       #adc6ff;
+  --gl-primary-cta:   #4d8eff;
   --gl-primary-hover: #3a7ae8;
-  --gl-on-primary:    #002e6a;
+  --gl-on-primary:    #ffffff;
+
+  /* Accent — used for room icon active, self badge */
+  --gl-accent:        #f7a600;
+  --gl-on-accent:     #0f172a;
+  --gl-accent-glow:   rgba(247, 166, 0, 0.40);
+  --gl-accent-subtle: rgba(247, 166, 0, 0.14);
 
   /* Secondary */
   --gl-secondary:     #b7c8e1;
-  --gl-secondary-bg:  #3a4a5f;   /* secondary-container */
+  --gl-secondary-bg:  #3a4a5f;
 
-  /* Tertiary / Online / Public */
+  /* Tertiary / Online */
   --gl-tertiary:      #4edea3;
   --gl-tertiary-bg:   rgba(78, 222, 163, 0.12);
 
@@ -57,14 +63,14 @@ chat-app {
   --gl-outline:       #8c909f;
   --gl-outline-var:   #424754;
 
-  /* Radii — from spec */
+  /* Radii */
   --gl-r-sm:   4px;
   --gl-r-md:   8px;
   --gl-r-lg:   16px;
   --gl-r-xl:   24px;
   --gl-r-full: 9999px;
 
-  /* Spacing — 8px scale */
+  /* Spacing */
   --gl-xs:  4px;
   --gl-sm:  8px;
   --gl-md:  16px;
@@ -73,17 +79,19 @@ chat-app {
   --gl-2xl: 48px;
 
   /* Blur levels */
-  --gl-blur-1: blur(16px);   /* Level 1 panels  */
-  --gl-blur-2: blur(20px);   /* Level 2 surfaces */
+  --gl-blur-1: blur(16px);
+  --gl-blur-2: blur(20px);
 
   display: flex;
   justify-content: center;
   min-height: 100vh;
   width: 100%;
   background-color: var(--gl-canvas);
+  /* Deep purple-blue gradient matching reference screenshot */
   background-image:
-    radial-gradient(ellipse 80% 60% at 20% 10%,  rgba(77,142,255,0.07)  0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 80%,  rgba(78,222,163,0.05)  0%, transparent 55%);
+    radial-gradient(ellipse 100% 80% at 0% 0%,   rgba(50, 30, 120, 0.60) 0%,  transparent 55%),
+    radial-gradient(ellipse 80%  70% at 100% 100%, rgba(30, 20,  90, 0.55) 0%,  transparent 55%),
+    radial-gradient(ellipse 60%  50% at 50%  50%,  rgba(20, 30,  80, 0.30) 0%,  transparent 60%);
   font-family: 'Inter', system-ui, sans-serif;
   font-size: 16px;
   line-height: 1.6;
@@ -95,59 +103,53 @@ chat-app {
    LIGHT MODE — Luminous Glass
    ============================================================ */
 @mixin light-vars {
-  /* Canvas & surfaces */
-  --gl-canvas:        #ffffff;                   /* surface-container-lowest */
-  --gl-surface-low:   #f2f3fd;                   /* surface-container-low    */
-  --gl-surface:       #ecedf7;                   /* surface-container        */
-  --gl-surface-high:  #e6e7f2;                   /* surface-container-high   */
-  --gl-surface-top:   #e1e2ec;                   /* surface-container-highest*/
-  --gl-surface-bright:#f9f9ff;                   /* surface-bright           */
+  --gl-canvas:        #ffffff;
+  --gl-surface-low:   #f2f3fd;
+  --gl-surface:       #ecedf7;
+  --gl-surface-high:  #e6e7f2;
+  --gl-surface-top:   #e1e2ec;
+  --gl-surface-bright:#f9f9ff;
 
-  /* Glass panel fills */
-  --gl-panel:         rgba(236, 237, 247, 0.72); /* surface-container @ 72%  */
+  --gl-panel:         rgba(236, 237, 247, 0.72);
   --gl-panel-hover:   rgba(236, 237, 247, 0.90);
-  --gl-panel-high:    rgba(230, 231, 242, 0.82); /* surface-container-high   */
-  --gl-card:          rgba(242, 243, 253, 0.68); /* surface-container-low    */
-  --gl-input-bg:      rgba(225, 226, 236, 0.80); /* surface-container-highest — sunken */
+  --gl-panel-high:    rgba(230, 231, 242, 0.82);
+  --gl-card:          rgba(242, 243, 253, 0.68);
+  --gl-input-bg:      rgba(225, 226, 236, 0.80);
 
-  /* Borders — light glass edges */
-  --gl-border:        rgba(0, 0, 0, 0.08);       /* outline-variant approx   */
+  --gl-border:        rgba(0, 0, 0, 0.08);
   --gl-border-faint:  rgba(0, 0, 0, 0.04);
-  --gl-border-focus:  rgba(0, 88, 190, 0.50);    /* primary                  */
+  --gl-border-focus:  rgba(0, 88, 190, 0.50);
 
-  /* Typography */
-  --gl-text:          #191b23;                   /* on-surface               */
-  --gl-text-muted:    #424754;                   /* on-surface-variant       */
-  --gl-text-faint:    #727785;                   /* outline                  */
+  --gl-text:          #191b23;
+  --gl-text-muted:    #424754;
+  --gl-text-faint:    #727785;
 
-  /* Primary (deep blue) */
-  --gl-primary:       #0058be;                   /* primary                  */
-  --gl-primary-cta:   #2170e4;                   /* primary-container — CTA  */
-  --gl-primary-hover: #004fa8;                   /* primary darker           */
-  --gl-on-primary:    #ffffff;                   /* on-primary               */
+  --gl-primary:       #0058be;
+  --gl-primary-cta:   #2170e4;
+  --gl-primary-hover: #004fa8;
+  --gl-on-primary:    #ffffff;
 
-  /* Secondary */
-  --gl-secondary:     #565e74;                   /* secondary                */
-  --gl-secondary-bg:  #dae2fd;                   /* secondary-container      */
+  --gl-accent:        #f7a600;
+  --gl-on-accent:     #0f172a;
+  --gl-accent-glow:   rgba(247, 166, 0, 0.35);
+  --gl-accent-subtle: rgba(247, 166, 0, 0.12);
 
-  /* Tertiary / Online / Public — warm amber */
-  --gl-tertiary:      #924700;                   /* tertiary                 */
+  --gl-secondary:     #565e74;
+  --gl-secondary-bg:  #dae2fd;
+
+  --gl-tertiary:      #924700;
   --gl-tertiary-bg:   rgba(146, 71, 0, 0.10);
 
-  /* Error / Alert */
-  --gl-error:         #ba1a1a;                   /* error                    */
+  --gl-error:         #ba1a1a;
   --gl-error-bg:      rgba(186, 26, 26, 0.08);
-  --gl-error-solid:   #93000a;                   /* on-error-container       */
+  --gl-error-solid:   #93000a;
 
-  /* Outline */
-  --gl-outline:       #727785;                   /* outline                  */
-  --gl-outline-var:   #c2c6d6;                   /* outline-variant          */
+  --gl-outline:       #727785;
+  --gl-outline-var:   #c2c6d6;
 
-  /* Blur levels — same depths, lighter tint */
   --gl-blur-1: blur(16px);
   --gl-blur-2: blur(20px);
 
-  /* Background canvas gradient — light ambient */
   background-color: var(--gl-canvas);
   background-image:
     radial-gradient(ellipse 80% 60% at 15% 5%,  rgba(33, 112, 228, 0.06) 0%, transparent 60%),
@@ -278,7 +280,7 @@ chat-app {
   border-radius: var(--gl-r-full);
   background: var(--gl-surface-high);
   border: 2px solid var(--gl-border);
-  outline: 2px solid var(--gl-canvas); /* cutout effect */
+  outline: 2px solid var(--gl-canvas);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -400,7 +402,6 @@ chat-app {
   text-overflow: ellipsis;
 }
 
-/* Status dot — 12px circle with 2px outline cutout */
 .lobby__dm-dot {
   width: 12px;
   height: 12px;
@@ -421,7 +422,6 @@ chat-app {
   min-width: 0;
 }
 
-/* Create Room banner */
 .lobby__create-banner {
   background: var(--gl-panel);
   backdrop-filter: var(--gl-blur-1);
@@ -463,7 +463,6 @@ chat-app {
 
 .lobby__create-input { flex: 1; }
 
-/* Sections */
 .lobby__section {
   background: var(--gl-panel);
   backdrop-filter: var(--gl-blur-1);
@@ -485,7 +484,6 @@ chat-app {
   margin: 0;
 }
 
-/* Trending */
 .lobby__trending {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -546,7 +544,6 @@ chat-app {
   margin-top: 2px;
 }
 
-/* Room Finder header */
 .lobby__finder-header {
   display: flex;
   justify-content: space-between;
@@ -575,7 +572,6 @@ chat-app {
   box-sizing: border-box;
 }
 
-/* Category pills */
 .lobby__categories {
   display: flex;
   gap: var(--gl-xs);
@@ -603,9 +599,7 @@ chat-app {
     border-color: rgba(33, 112, 228, 0.35);
     color: var(--gl-primary);
 
-    &:hover {
-      background: rgba(33, 112, 228, 0.18);
-    }
+    &:hover { background: rgba(33, 112, 228, 0.18); }
   }
 }
 
@@ -667,7 +661,6 @@ chat-app {
   font-size: 14px;
 }
 
-/* Room row */
 .lobby__room-row {
   display: flex;
   align-items: center;
@@ -724,7 +717,6 @@ chat-app {
   font-size: 13px;
 }
 
-/* Status badges — pill chips */
 .lobby__status {
   display: inline-flex;
   align-items: center;
@@ -749,9 +741,7 @@ chat-app {
 }
 
 .lobby__status--public svg,
-.lobby__status--private svg {
-  flex-shrink: 0;
-}
+.lobby__status--private svg { flex-shrink: 0; }
 
 .lobby__action-cell {
   display: flex;
@@ -779,7 +769,7 @@ chat-app {
 }
 
 /* ============================================================
-   Inputs — "sunken" into glass panels
+   Inputs
    ============================================================ */
 .lobby__input {
   padding: 9px 12px;
@@ -820,7 +810,6 @@ chat-app {
 
   &:disabled { opacity: 0.40; cursor: not-allowed; }
 
-  /* Primary — solid blue */
   &--create {
     background: var(--gl-primary-cta);
     color: var(--gl-on-primary);
@@ -828,7 +817,6 @@ chat-app {
     &:hover:not(:disabled) { background: var(--gl-primary-hover); }
   }
 
-  /* Join — primary */
   &--join {
     background: var(--gl-primary-cta);
     color: var(--gl-on-primary);
@@ -847,7 +835,6 @@ chat-app {
     &:hover:not(:disabled) { background: var(--gl-primary-hover); }
   }
 
-  /* Delete — ghost error */
   &--delete {
     background: var(--gl-error-bg);
     color: var(--gl-error);
@@ -858,7 +845,6 @@ chat-app {
     &:hover { background: rgba(186,26,26,0.14); }
   }
 
-  /* Logout — ghost secondary */
   &--logout {
     background: rgba(0,0,0,0.04);
     color: var(--gl-text-muted);
@@ -897,9 +883,6 @@ chat-app {
   margin: var(--gl-xs) 0;
 }
 
-/* ============================================================
-   Glass divider
-   ============================================================ */
 .lobby__divider {
   height: 1px;
   background: var(--gl-border-faint);
@@ -911,25 +894,13 @@ chat-app {
    Responsive
    ============================================================ */
 @media (max-width: 900px) {
-  .lobby__layout {
-    grid-template-columns: 1fr;
-  }
-  .lobby__sidebar {
-    display: none;
-  }
-  .lobby__trending {
-    grid-template-columns: 1fr;
-  }
+  .lobby__layout { grid-template-columns: 1fr; }
+  .lobby__sidebar { display: none; }
+  .lobby__trending { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 600px) {
-  .lobby {
-    padding: 0 var(--gl-md) var(--gl-xl);
-  }
-  .lobby__header {
-    padding: var(--gl-md) 0 var(--gl-sm);
-  }
-  .lobby__title {
-    font-size: 18px;
-  }
+  .lobby { padding: 0 var(--gl-md) var(--gl-xl); }
+  .lobby__header { padding: var(--gl-md) 0 var(--gl-sm); }
+  .lobby__title { font-size: 18px; }
 }
