@@ -54,7 +54,7 @@ export class LobbyCreateRoom extends LitElement {
       ${this.isModalOpen
         ? html`
             <div class="create-server-modal-overlay" @click=${this.closeModal}>
-              <div class="create-server-modal">
+              <div class="create-server-modal" role="dialog" aria-modal="true" @click=${(e: Event) => e.stopPropagation()}>
                 <div class="modal-header">
                   <div class="modal-header-titles">
                     <h2>Create a Server</h2>
