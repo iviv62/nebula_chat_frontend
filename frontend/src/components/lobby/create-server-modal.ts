@@ -1,18 +1,37 @@
 import { LitElement, html } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
-@customElement("lobby-create-room")
-export class LobbyCreateRoom extends LitElement {
+type Privacy = "public" | "password";
+
+@customElement("create-server-modal")
+export class CreateServerModal extends LitElement {
+  // Shadow DOM disabled intentionally — styles are applied globally via chat-app.styles.scss
   createRenderRoot() {
     return this;
   }
 
-  @property() error = "";
+  @property({ type: String }) error: string = "";
 
   @state() private isModalOpen = false;
   @state() private newRoomName = "";
   @state() private selectedCategory = "Gaming";
-  @state() private selectedPrivacy = "public";
+  @state() private selectedPrivacy: Privacy = "public";
+  @state() private avatarDataUrl: string | null = null;
+
+  private _triggerEl: HTMLElement | null = null;
+  private _onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Escape" && this.isModalOpen) this.closeModal();
+  };
+
+  connectedCallback() {
+    super.connectedCallback();
+    window.addEventListener("keydown", this._onKeyDown);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener("keydown", this._onKeyDown);
+  }
 
   private handleSubmit(e: Event) {
     e.preventDefault();
@@ -22,24 +41,51 @@ export class LobbyCreateRoom extends LitElement {
         detail: {
           name: this.newRoomName.trim(),
           status: this.selectedPrivacy,
+          category: this.selectedCategory,
+          avatar: this.avatarDataUrl,
         },
         bubbles: true,
         composed: true,
       }),
     );
     this.newRoomName = "";
+    this.error = "";
+    this.avatarDataUrl = null;
     this.isModalOpen = false;
+    this._triggerEl?.focus();
   }
 
   private openModal() {
+    this._triggerEl = this.renderRoot.querySelector(".lobby__btn--dark");
     this.isModalOpen = true;
     this.newRoomName = "";
     this.selectedCategory = "Gaming";
     this.selectedPrivacy = "public";
+    this.avatarDataUrl = null;
+    this.updateComplete.then(() => {
+      (this.renderRoot.querySelector("input[type='text']") as HTMLElement)?.focus();
+    });
   }
 
   private closeModal() {
     this.isModalOpen = false;
+    this.avatarDataUrl = null;
+    this._triggerEl?.focus();
+  }
+
+  private triggerAvatarUpload() {
+    const input = this.renderRoot.querySelector<HTMLInputElement>("#avatar-file-input");
+    input?.click();
+  }
+
+  private handleAvatarFileChange(e: Event) {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.avatarDataUrl = reader.result as string;
+    };
+    reader.readAsDataURL(file);
   }
 
   render() {
@@ -53,40 +99,76 @@ export class LobbyCreateRoom extends LitElement {
 
       ${this.isModalOpen
         ? html`
-            <div class="create-server-modal-overlay">
+            <div
+              class="create-server-modal-overlay"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="modal-title"
+            >
               <div class="create-server-modal">
                 <div class="modal-header">
                   <div class="modal-header-titles">
-                    <h2>Create a Server</h2>
+                    <h2 id="modal-title">Create a Server</h2>
                     <p>Your new community hub starts here.</p>
                   </div>
-                  <button class="modal-close" @click=${this.closeModal}>&times;</button>
+                  <button
+                    class="modal-close"
+                    @click=${this.closeModal}
+                    aria-label="Close dialog"
+                  >
+                    &times;
+                  </button>
                 </div>
 
                 <div class="modal-body">
                   <div class="modal-section">
                     <div class="modal-section-title">1. IDENTITY</div>
                     <div class="identity-content">
-                      <div class="upload-avatar">
-                        <svg
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        >
-                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                          <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                          <polyline points="21 15 16 10 5 21"></polyline>
-                        </svg>
-                        <span>UPLOAD</span>
-                      </div>
+                      <!-- Hidden file input -->
+                      <input
+                        id="avatar-file-input"
+                        type="file"
+                        accept="image/*"
+                        style="display:none"
+                        @change=${this.handleAvatarFileChange}
+                      />
+
+                      <button
+                        class="upload-avatar ${this.avatarDataUrl ? "upload-avatar--has-image" : ""}"
+                        @click=${this.triggerAvatarUpload}
+                        aria-label="Upload server avatar"
+                        type="button"
+                      >
+                        ${this.avatarDataUrl
+                          ? html`<img
+                              src=${this.avatarDataUrl}
+                              alt="Server avatar preview"
+                              class="upload-avatar__preview"
+                            />`
+                          : html`
+                              <svg
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true"
+                              >
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                              </svg>
+                              <span>UPLOAD</span>
+                            `}
+                      </button>
+
                       <div class="server-name-input">
-                        <label>Server Name</label>
+                        <label for="server-name-input">Server Name</label>
                         <input
+                          id="server-name-input"
                           type="text"
                           placeholder="e.g. Neon Riders Guild"
                           .value=${this.newRoomName}
@@ -99,18 +181,27 @@ export class LobbyCreateRoom extends LitElement {
 
                   <div class="modal-section">
                     <div class="modal-section-title">2. CATEGORY</div>
-                    <div class="category-cards">
+                    <div class="category-cards" role="radiogroup" aria-label="Server category">
                       ${["Gaming", "Learning", "Music", "Social"].map(
                         (cat) => html`
                           <div
                             class="category-card ${this.selectedCategory === cat ? "selected" : ""}"
+                            role="radio"
+                            tabindex="0"
+                            aria-checked=${this.selectedCategory === cat}
                             @click=${() => (this.selectedCategory = cat)}
+                            @keydown=${(e: KeyboardEvent) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                this.selectedCategory = cat;
+                              }
+                            }}
                           >
-                            <div class="category-icon">${this.renderCategoryIcon(cat)}</div>
+                            <div class="category-icon" aria-hidden="true">${this.renderCategoryIcon(cat)}</div>
                             <div class="category-name">${cat}</div>
                             ${this.selectedCategory === cat
                               ? html`
-                                  <div class="check-icon">
+                                  <div class="check-icon" aria-hidden="true">
                                     <svg
                                       width="12"
                                       height="12"
@@ -135,12 +226,21 @@ export class LobbyCreateRoom extends LitElement {
 
                   <div class="modal-section">
                     <div class="modal-section-title">3. PRIVACY SETTINGS</div>
-                    <div class="privacy-cards">
+                    <div class="privacy-cards" role="radiogroup" aria-label="Privacy setting">
                       <div
                         class="privacy-card ${this.selectedPrivacy === "public" ? "selected" : ""}"
+                        role="radio"
+                        tabindex="0"
+                        aria-checked=${this.selectedPrivacy === "public"}
                         @click=${() => (this.selectedPrivacy = "public")}
+                        @keydown=${(e: KeyboardEvent) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            this.selectedPrivacy = "public";
+                          }
+                        }}
                       >
-                        <div class="privacy-icon">
+                        <div class="privacy-icon" aria-hidden="true">
                           <svg
                             width="20"
                             height="20"
@@ -162,7 +262,7 @@ export class LobbyCreateRoom extends LitElement {
                           <div class="privacy-title">Public</div>
                           <div class="privacy-desc">Anyone can discover and join.</div>
                         </div>
-                        <div class="radio-circle">
+                        <div class="radio-circle" aria-hidden="true">
                           ${this.selectedPrivacy === "public"
                             ? html`<div class="radio-inner"></div>`
                             : ""}
@@ -173,9 +273,18 @@ export class LobbyCreateRoom extends LitElement {
                         class="privacy-card ${this.selectedPrivacy === "password"
                           ? "selected"
                           : ""}"
+                        role="radio"
+                        tabindex="0"
+                        aria-checked=${this.selectedPrivacy === "password"}
                         @click=${() => (this.selectedPrivacy = "password")}
+                        @keydown=${(e: KeyboardEvent) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            this.selectedPrivacy = "password";
+                          }
+                        }}
                       >
-                        <div class="privacy-icon">
+                        <div class="privacy-icon" aria-hidden="true">
                           <svg
                             width="20"
                             height="20"
@@ -194,7 +303,7 @@ export class LobbyCreateRoom extends LitElement {
                           <div class="privacy-title">Private</div>
                           <div class="privacy-desc">Invite-only access.</div>
                         </div>
-                        <div class="radio-circle">
+                        <div class="radio-circle" aria-hidden="true">
                           ${this.selectedPrivacy === "password"
                             ? html`<div class="radio-inner"></div>`
                             : ""}
@@ -203,7 +312,7 @@ export class LobbyCreateRoom extends LitElement {
                     </div>
                   </div>
 
-                  ${this.error ? html`<div class="modal-error">${this.error}</div>` : ""}
+                  ${this.error ? html`<div class="modal-error" role="alert">${this.error}</div>` : ""}
                 </div>
 
                 <div class="modal-footer">
