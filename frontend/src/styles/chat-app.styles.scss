@@ -473,6 +473,8 @@ chat-app {
     system-ui,
     -apple-system,
     sans-serif;
+  /* Prevent the modal itself from ever growing wider than its declared width */
+  box-sizing: border-box;
 }
 
 .modal-header {
@@ -517,6 +519,8 @@ chat-app {
   gap: 1.5rem;
   max-height: 60vh;
   overflow-y: auto;
+  /* Contain children — nothing should escape horizontally */
+  overflow-x: hidden;
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -545,6 +549,8 @@ chat-app {
   display: flex;
   gap: 1rem;
   align-items: center;
+  /* Without min-width: 0, a flex child can overflow its container */
+  min-width: 0;
 }
 
 .upload-avatar {
@@ -605,6 +611,8 @@ chat-app {
 
 .server-name-input {
   flex: 1;
+  /* Prevents flex child from overflowing its container */
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -617,6 +625,7 @@ chat-app {
 
   input {
     width: 100%;
+    box-sizing: border-box;
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
