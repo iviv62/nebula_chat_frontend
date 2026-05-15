@@ -56,6 +56,7 @@ export class CreateServerModal extends LitElement {
     this._triggerEl = this.renderRoot.querySelector(".lobby__btn--dark");
     this.isModalOpen = true;
     this.newRoomName = "";
+    this.error = "";
     this.selectedCategory = "Gaming";
     this.selectedPrivacy = "public";
     this.updateComplete.then(() => {
