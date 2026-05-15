@@ -53,7 +53,7 @@ export class LobbyCreateRoom extends LitElement {
 
       ${this.isModalOpen
         ? html`
-            <div class="create-server-modal-overlay">
+            <div class="create-server-modal-overlay" @click=${this.closeModal}>
               <div class="create-server-modal">
                 <div class="modal-header">
                   <div class="modal-header-titles">
