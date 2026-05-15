@@ -53,8 +53,8 @@ export class LobbyCreateRoom extends LitElement {
 
       ${this.isModalOpen
         ? html`
-            <div class="create-server-modal-overlay" @click=${this.closeModal}>
-              <div class="create-server-modal" role="dialog" aria-modal="true" @click=${(e: Event) => e.stopPropagation()}>
+            <div class="create-server-modal-overlay">
+              <div class="create-server-modal">
                 <div class="modal-header">
                   <div class="modal-header-titles">
                     <h2>Create a Server</h2>
@@ -92,7 +92,6 @@ export class LobbyCreateRoom extends LitElement {
                           .value=${this.newRoomName}
                           @input=${(e: Event) =>
                             (this.newRoomName = (e.target as HTMLInputElement).value)}
-                          @keydown=${(e: KeyboardEvent) => e.key === 'Enter' && this.handleSubmit(e)}
                         />
                       </div>
                     </div>
