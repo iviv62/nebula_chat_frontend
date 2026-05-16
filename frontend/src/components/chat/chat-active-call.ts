@@ -122,7 +122,13 @@ export class ChatActiveCall extends LitElement {
   private handleVolumeChange(e: Event) {
     const input = e.target as HTMLInputElement;
     this.volume = Number(input.value);
-    this.dispatchEvent(new CustomEvent("voice-volume-change", { detail: { volume: this.volume }, bubbles: true, composed: true }));
+    this.dispatchEvent(
+      new CustomEvent("voice-volume-change", {
+        detail: { volume: this.volume },
+        bubbles: true,
+        composed: true,
+      }),
+    );
   }
 
   private handleScreenShareToggle() {
@@ -157,36 +163,46 @@ export class ChatActiveCall extends LitElement {
 
     return html`
       <div class="active-call">
-
         <!-- Header -->
         <div class="active-call__header">
           <div class="active-call__header-left">
             ${iconWaveform}
             <span class="active-call__header-title">
-              VOICE ${this.callState === "calling" ? "CONNECTING..." : "CONNECTED"} / ${this.roomName.toUpperCase()}
+              VOICE ${this.callState === "calling" ? "CONNECTING..." : "CONNECTED"} /
+              ${this.roomName.toUpperCase()}
             </span>
           </div>
           <div class="active-call__header-right">
             <span class="active-call__timer">${this.timer}</span>
-            <button class="active-call__icon-btn" title="View Chat" aria-label="View Chat" @click=${() => this.dispatchEvent(new CustomEvent("return-to-chat", { bubbles: true, composed: true }))}>
+            <button
+              class="active-call__icon-btn"
+              title="View Chat"
+              aria-label="View Chat"
+              @click=${() =>
+                this.dispatchEvent(
+                  new CustomEvent("return-to-chat", { bubbles: true, composed: true }),
+                )}
+            >
               ${iconChat}
             </button>
           </div>
         </div>
 
-        ${this.connectionMetrics ? html`
-          <div class="active-call__metrics">
-            <div class="active-call__metrics-title">Connection</div>
-            <div>Ping: ${this.connectionMetrics.latencyMs} ms</div>
-            <div>Loss: ${this.connectionMetrics.packetLossPct}%</div>
-            <div>BW: ${this.connectionMetrics.bandwidthMbps} Mbps</div>
-            <div>FPS: ${this.connectionMetrics.fps}</div>
-          </div>
-        ` : nothing}
+        ${this.connectionMetrics
+          ? html`
+              <div class="active-call__metrics">
+                <div class="active-call__metrics-title">Connection</div>
+                <div>Ping: ${this.connectionMetrics.latencyMs} ms</div>
+                <div>Loss: ${this.connectionMetrics.packetLossPct}%</div>
+                <div>BW: ${this.connectionMetrics.bandwidthMbps} Mbps</div>
+                <div>FPS: ${this.connectionMetrics.fps}</div>
+              </div>
+            `
+          : nothing}
 
         <!-- Grid -->
         <div class="active-call__grid">
-          ${Array.from(uniqueParticipants.values()).map(p => {
+          ${Array.from(uniqueParticipants.values()).map((p) => {
             const isSelf = p.username === this.username;
             const color = this.getColorForUser(p.username);
             const initials = this.getInitials(p.username);
@@ -200,7 +216,8 @@ export class ChatActiveCall extends LitElement {
                 </div>
                 <div class="active-call__card-controls">
                   <div class="active-call__badge">
-                    ${p.username} ${isSelf ? html`<span class="active-call__badge-you">YOU</span>` : ""}
+                    ${p.username}
+                    ${isSelf ? html`<span class="active-call__badge-you">YOU</span>` : ""}
                   </div>
                 </div>
               </div>
@@ -208,34 +225,38 @@ export class ChatActiveCall extends LitElement {
           })}
         </div>
 
-        ${this.screenShareStream || this.screenSharingUser ? html`
-          <div class="active-call__screen-share">
-            <div class="active-call__screen-share-header">
-              <p class="active-call__screen-share-label">
-                ${this.screenSharingUser
-                  ? `${this.screenSharingUser} is sharing their screen`
-                  : "Screen share is live"}
-              </p>
-              <button
-                type="button"
-                class="active-call__screen-fullscreen-btn"
-                @click=${this.handleScreenShareFullscreen}
-                ?disabled=${!this.screenShareStream}
-                title="Fullscreen"
-                aria-label="Fullscreen screen share"
-              >
-                ${iconMaximize}
-              </button>
-            </div>
-            ${this.isScreenShareLoading ? html`
-              <div class="active-call__screen-loading" role="status" aria-live="polite">
-                <span class="active-call__screen-spinner"></span>
-                <span>Establishing screen share...</span>
+        ${this.screenShareStream || this.screenSharingUser
+          ? html`
+              <div class="active-call__screen-share">
+                <div class="active-call__screen-share-header">
+                  <p class="active-call__screen-share-label">
+                    ${this.screenSharingUser
+                      ? `${this.screenSharingUser} is sharing their screen`
+                      : "Screen share is live"}
+                  </p>
+                  <button
+                    type="button"
+                    class="active-call__screen-fullscreen-btn"
+                    @click=${this.handleScreenShareFullscreen}
+                    ?disabled=${!this.screenShareStream}
+                    title="Fullscreen"
+                    aria-label="Fullscreen screen share"
+                  >
+                    ${iconMaximize}
+                  </button>
+                </div>
+                ${this.isScreenShareLoading
+                  ? html`
+                      <div class="active-call__screen-loading" role="status" aria-live="polite">
+                        <span class="active-call__screen-spinner"></span>
+                        <span>Establishing screen share...</span>
+                      </div>
+                    `
+                  : nothing}
+                <video class="active-call__screen-video" autoplay playsinline muted></video>
               </div>
-            ` : nothing}
-            <video class="active-call__screen-video" autoplay playsinline muted></video>
-          </div>
-        ` : nothing}
+            `
+          : nothing}
 
         <!-- Toolbar -->
         <div class="active-call__toolbar">
@@ -244,7 +265,9 @@ export class ChatActiveCall extends LitElement {
               ${iconVideoCameraOff}
             </button>
             <button
-              class="active-call__toolbar-btn ${this.isScreenSharing ? "active-call__toolbar-btn--active" : ""}"
+              class="active-call__toolbar-btn ${this.isScreenSharing
+                ? "active-call__toolbar-btn--active"
+                : ""}"
               title=${this.isScreenSharing ? "Stop sharing screen" : "Share screen"}
               aria-label=${this.isScreenSharing ? "Stop sharing screen" : "Share screen"}
               @click=${this.handleScreenShareToggle}
@@ -254,56 +277,95 @@ export class ChatActiveCall extends LitElement {
             <div class="active-call__toolbar-divider"></div>
             <button
               class="active-call__toolbar-btn"
-              style="${this.isMuted ? 'background-color: #ef4444; color: white; border-color: #ef4444;' : ''}"
+              style="${this.isMuted
+                ? "background-color: #ef4444; color: white; border-color: #ef4444;"
+                : ""}"
               title=${this.isMuted ? "Unmute microphone" : "Mute microphone"}
               aria-label=${this.isMuted ? "Unmute microphone" : "Mute microphone"}
-              @click=${() => this.dispatchEvent(new CustomEvent("voice-mute-toggle", { detail: { muted: !this.isMuted }, bubbles: true, composed: true }))}
+              @click=${() =>
+                this.dispatchEvent(
+                  new CustomEvent("voice-mute-toggle", {
+                    detail: { muted: !this.isMuted },
+                    bubbles: true,
+                    composed: true,
+                  }),
+                )}
             >
               ${this.isMuted ? iconMicOff : iconMic}
             </button>
-            <button class="active-call__toolbar-btn active-call__toolbar-btn--end" title="End call" aria-label="End call" @click=${this.handleEndCall}>
+            <button
+              class="active-call__toolbar-btn active-call__toolbar-btn--end"
+              title="End call"
+              aria-label="End call"
+              @click=${this.handleEndCall}
+            >
               ${iconPhoneOff}
             </button>
           </div>
           <div class="active-call__toolbar-right">
             <div style="position: relative; display: inline-block;">
-              ${this.showVolumeSlider ? html`
-                <div style="position: fixed; inset: 0; z-index: 99;" @click=${() => this.showVolumeSlider = false}></div>
-                <div class="active-call__volume-popup" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 8px; background-color: #1f2937; border-radius: 8px; padding: 12px 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 100;">
-                  <span style="color: #9ca3af; font-size: 12px; font-weight: bold; margin-bottom: 8px;">${this.volume}%</span>
-                  <style>
-                    .popup-slider::-webkit-slider-thumb {
-                      appearance: none;
-                      width: 14px;
-                      height: 14px;
-                      background: #f59e0b;
-                      border-radius: 50%;
-                      cursor: pointer;
-                    }
-                    .popup-slider::-moz-range-thumb {
-                      width: 14px;
-                      height: 14px;
-                      background: #f59e0b;
-                      border-radius: 50%;
-                      cursor: pointer;
-                    }
-                  </style>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    .value=${String(this.volume)}
-                    @input=${this.handleVolumeChange}
-                    class="popup-slider"
-                    style="appearance: none; width: 100px; height: 6px; background: #374151; accent-color: #f59e0b; border-radius: 3px; outline: none; margin: 0; transform: rotate(-90deg); transform-origin: center; margin-top: 40px; margin-bottom: 40px; cursor: pointer;"
-                  />
-                </div>
-              ` : nothing}
-              <button class="active-call__icon-btn" title=${this.volume === 0 ? "Unmute volume" : "Mute volume"} aria-label=${this.volume === 0 ? "Unmute volume" : "Mute volume"} @click=${() => this.showVolumeSlider = !this.showVolumeSlider}>
+              ${this.showVolumeSlider
+                ? html`
+                    <div
+                      style="position: fixed; inset: 0; z-index: 99;"
+                      @click=${() => (this.showVolumeSlider = false)}
+                    ></div>
+                    <div
+                      class="active-call__volume-popup"
+                      style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 8px; background-color: #1f2937; border-radius: 8px; padding: 12px 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 100;"
+                    >
+                      <span
+                        style="color: #9ca3af; font-size: 12px; font-weight: bold; margin-bottom: 8px;"
+                        >${this.volume}%</span
+                      >
+                      <style>
+                        .popup-slider::-webkit-slider-thumb {
+                          appearance: none;
+                          width: 14px;
+                          height: 14px;
+                          background: #f59e0b;
+                          border-radius: 50%;
+                          cursor: pointer;
+                        }
+                        .popup-slider::-moz-range-thumb {
+                          width: 14px;
+                          height: 14px;
+                          background: #f59e0b;
+                          border-radius: 50%;
+                          cursor: pointer;
+                        }
+                      </style>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        aria-label="Volume slider"
+                        .value=${String(this.volume)}
+                        @input=${this.handleVolumeChange}
+                        class="popup-slider"
+                        style="appearance: none; width: 100px; height: 6px; background: #374151; accent-color: #f59e0b; border-radius: 3px; outline: none; margin: 0; transform: rotate(-90deg); transform-origin: center; margin-top: 40px; margin-bottom: 40px; cursor: pointer;"
+                      />
+                    </div>
+                  `
+                : nothing}
+              <button
+                class="active-call__icon-btn"
+                title=${this.volume === 0 ? "Unmute volume" : "Mute volume"}
+                aria-label=${this.volume === 0 ? "Unmute volume" : "Mute volume"}
+                @click=${() => (this.showVolumeSlider = !this.showVolumeSlider)}
+              >
                 ${this.volume === 0 ? iconVolumeOff : iconVolume}
               </button>
             </div>
-            <button class="active-call__icon-btn" title="Settings" aria-label="Settings" @click=${() => this.dispatchEvent(new CustomEvent("open-settings", { bubbles: true, composed: true }))}>
+            <button
+              class="active-call__icon-btn"
+              title="Settings"
+              aria-label="Settings"
+              @click=${() =>
+                this.dispatchEvent(
+                  new CustomEvent("open-settings", { bubbles: true, composed: true }),
+                )}
+            >
               ${iconSettings}
             </button>
             <button class="active-call__icon-btn" title="Expand view" aria-label="Expand view">
