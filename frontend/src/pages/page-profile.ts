@@ -69,7 +69,7 @@ export class PageProfile extends LitElement {
 
   render() {
     if (!this.authChecked) {
-      return html`<p style="padding: 1rem; color: var(--text-primary, inherit);">Checking session...</p>`;
+      return html`<p style="padding: 1rem;">Checking session...</p>`;
     }
 
     if (!this.isAuthorized) {
