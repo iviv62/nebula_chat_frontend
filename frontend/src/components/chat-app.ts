@@ -256,7 +256,10 @@ export class ChatApp extends LitElement {
             <div
               class="lobby__card"
               style="cursor: pointer;"
+              role="button"
+              tabindex="0"
               @click=${() => navigate("/profile")}
+              @keydown=${(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') navigate("/profile"); }}
             >
               <h3 class="lobby__card-title">Signed In User</h3>
               <div class="lobby__label">Username</div>
