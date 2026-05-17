@@ -4,7 +4,7 @@
 
 ## 2024-05-16 - Contextual Tooltips for Disabled States
 **Learning:** Found a pattern where disabled buttons lacked context for screen readers and sighted users. A static `title="Send"` on a disabled send button is confusing.
-**Action:** When conditionally disabling action buttons, dynamically update both `title` and `aria-label` attributes to explain *why* the button is disabled (e.g., `title=${canSubmit ? "Send" : "Cannot send empty message"}`), rather than just showing it as unresponsive.
+**Action:** When conditionally disabling action buttons, dynamically update both title and aria-label attributes to explain *why* the button is disabled (e.g., title=${isSubmitting ? "Sending..." : (canSubmit ? "Send" : "Cannot send empty message")}), rather than just showing it as unresponsive.
 
 ## 2024-05-16 - Standalone Input Accessibility
 **Learning:** Several custom inputs (search bars, range sliders, compose textareas) across the app were missing `aria-label` attributes because they didn't have visual `<label>` elements, making them opaque to screen readers.
