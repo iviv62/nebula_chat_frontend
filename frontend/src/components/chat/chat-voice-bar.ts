@@ -10,6 +10,14 @@ export class ChatVoiceBar extends LitElement {
   @property({ type: Array }) participants: VoiceParticipant[] = [];
   @property() username = "";
   @property({ type: Boolean }) isMuted = false;
+  /**
+   * Unix epoch (seconds) at which the call started, as returned by the backend
+   * GET /voice/{room}/status `call_start_time` field.
+   * When provided, the timer is seeded from this value so the ribbon stays in
+   * sync with the active-call view and all other participants.
+   * Falls back to Date.now() if null.
+   */
+  @property({ type: Number }) backendCallStartTime: number | null = null;
 
   @state() private timer = "00:00";
   private intervalId: ReturnType<typeof setInterval> | null = null;
@@ -27,7 +35,7 @@ export class ChatVoiceBar extends LitElement {
     super.disconnectedCallback();
   }
 
-  updated(changedProperties: Map<string, any>) {
+  updated(changedProperties: Map<string, unknown>) {
     if (changedProperties.has("state")) {
       if (this.state === "active") {
         this.startTimer();
@@ -35,17 +43,39 @@ export class ChatVoiceBar extends LitElement {
         this.stopTimer();
       }
     }
+
+    // Re-seed if the backend value arrives after state is already active
+    // (e.g. status fetch resolves after the WS join event).
+    if (
+      changedProperties.has("backendCallStartTime") &&
+      this.state === "active" &&
+      this.backendCallStartTime != null
+    ) {
+      this.stopTimer();
+      this.startTimer();
+    }
   }
 
   private startTimer() {
     if (this.intervalId) return;
-    this.callStartTime = Date.now();
-    this.intervalId = setInterval(() => {
-      const diff = Math.floor((Date.now() - this.callStartTime) / 1000);
-      const minutes = String(Math.floor(diff / 60)).padStart(2, "0");
-      const seconds = String(diff % 60).padStart(2, "0");
-      this.timer = `${minutes}:${seconds}`;
-    }, 1000);
+    // Seed from backend timestamp (Unix seconds → ms) when available so that
+    // the ribbon stays in sync with chat-active-call and other participants.
+    // Falls back to Date.now() when no backend value is present.
+    this.callStartTime =
+      this.backendCallStartTime != null
+        ? this.backendCallStartTime * 1000
+        : Date.now();
+
+    // Render first tick synchronously to avoid a 1-second blank flash.
+    this.tickTimer();
+    this.intervalId = setInterval(() => this.tickTimer(), 1000);
+  }
+
+  private tickTimer() {
+    const diff = Math.max(0, Math.floor((Date.now() - this.callStartTime) / 1000));
+    const minutes = String(Math.floor(diff / 60)).padStart(2, "0");
+    const seconds = String(diff % 60).padStart(2, "0");
+    this.timer = `${minutes}:${seconds}`;
   }
 
   private stopTimer() {

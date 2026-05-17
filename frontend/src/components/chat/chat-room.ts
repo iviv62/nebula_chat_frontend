@@ -9,6 +9,7 @@ import type { TypingEvent } from "../../features/lib/chat/chat-message-adapter";
 import {
   addMessageReaction,
   fetchUnreadCount,
+  fetchVoiceStatus,
   type VoiceParticipant,
   removeMessageReaction,
   uploadChatImage,
@@ -81,6 +82,8 @@ export class ChatRoom extends LitElement {
   @state() private _screenSharingUser: string | null = null;
   @state() private _screenShareStream: MediaStream | null = null;
   @state() private _connectionMetrics: ConnectionMetrics | null = null;
+  /** Unix epoch seconds from backend — seeds both the active-call and voice-bar timers. */
+  @state() private _callStartTime: number | null = null;
 
   @watch(settingsStore)
   private settingsState?: SettingsState;
@@ -101,7 +104,9 @@ export class ChatRoom extends LitElement {
       {
         onCallStateChange: (state) => {
           this._voiceState = state;
-          if (state === "idle" || state === "error") this.resetVoiceUiState();
+          if (state === "idle" || state === "error") {
+            this.resetVoiceUiState();
+          }
         },
         onParticipantsChange: (participants: Participant[]) => {
           this._voiceParticipants = participants as VoiceParticipant[];
@@ -140,9 +145,6 @@ export class ChatRoom extends LitElement {
       onLoadingChange: (isLoading) => this.handleLoadingChange(isLoading),
       onReconnectChange: (isReconnecting) => (this.isReconnecting = isReconnecting),
       onMessageAck: (clientId, serverId) => {
-        // Replace the temp clientId-based message with the confirmed server id
-        // and flip status to 'sent'. The broadcast dedup is handled by
-        // ackedServerIds in the controller — no need to touch seenMessageIds here.
         console.log(`[ChatRoom] onMessageAck — clientId=${clientId} serverId=${serverId}`);
         this.messages = this.messages.map((m) =>
           m.clientId === clientId
@@ -243,6 +245,7 @@ export class ChatRoom extends LitElement {
     this._screenSharingUser = null;
     this._screenShareStream = null;
     this._isScreenSharing = false;
+    this._callStartTime = null;
   }
 
   private get inCall() {
@@ -290,7 +293,20 @@ export class ChatRoom extends LitElement {
     this._isMuted = false;
     this.webrtc.setMuted(false);
     void this.webrtc.joinCall();
+    // Fetch the authoritative call start time from the backend so both the
+    // active-call view and the voice-bar ribbon show the same elapsed duration.
+    void this.loadCallStartTime();
   };
+
+  private async loadCallStartTime(): Promise<void> {
+    try {
+      const status = await fetchVoiceStatus(this.roomId);
+      this._callStartTime = status.call_start_time;
+    } catch {
+      // Non-critical: both components fall back to Date.now()
+      this._callStartTime = null;
+    }
+  }
 
   private handleVoiceStop = () => {
     this.webrtc.leaveCall();
@@ -572,9 +588,6 @@ export class ChatRoom extends LitElement {
       return;
     }
 
-    // Append optimistic message immediately — visible before server round-trip.
-    // Do NOT pre-register clientMsgId in seenMessageIds here; trackIncomingUserMessage
-    // handles that on the first call. Broadcast dedup is owned by the controller.
     const optimisticMsg: UiMessage = {
       id: clientMsgId,
       clientId: clientMsgId,
@@ -632,6 +645,7 @@ export class ChatRoom extends LitElement {
                   .screenSharingUser=${this._screenSharingUser}
                   .screenShareStream=${this._screenShareStream}
                   .connectionMetrics=${this._connectionMetrics}
+                  .backendCallStartTime=${this._callStartTime}
                   @voice-stop=${this.handleActiveCallVoiceStop}
                   @return-to-chat=${this.handleReturnToChat}
                   @voice-mute-toggle=${this.handleMuteToggle}
@@ -645,6 +659,7 @@ export class ChatRoom extends LitElement {
                   .participants=${this._voiceParticipants}
                   .username=${this.username}
                   .isMuted=${this._isMuted}
+                  .backendCallStartTime=${this._callStartTime}
                   @return-to-call=${this.handleReturnToCall}
                   @voice-stop=${this.handleVoiceStop}
                   @voice-dismiss=${this.handleVoiceDismiss}
