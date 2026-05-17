@@ -6,16 +6,12 @@ import "../pages/page-login";
 import "../pages/page-register";
 import "../pages/page-dashboard";
 import "../pages/page-chat";
-import "../pages/page-profile";
+import "../pages/page-landing";
 
 export const routes: RouteConfig[] = [
   {
     path: "/",
-    // Defer navigation so it doesn't fire as a side-effect during render.
-    render: () => {
-      requestAnimationFrame(() => navigate("/chat"));
-      return html``;
-    },
+    render: () => html`<page-landing></page-landing>`,
   },
   {
     path: "/login",
@@ -32,10 +28,6 @@ export const routes: RouteConfig[] = [
   {
     path: "/chat/*",
     render: () => html`<page-chat></page-chat>`,
-  },
-  {
-    path: "/profile",
-    render: () => html`<page-profile></page-profile>`,
   },
   // Catch-all: redirect unknown paths to /chat
   {

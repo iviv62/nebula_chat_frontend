@@ -17,7 +17,7 @@ export class AppButton extends LitElement {
 
   render() {
     return html`
-      <button class="${this.theme}" ?disabled=${this.disabled} type=${this.type}>
+      <button part="button" class="${this.theme}" ?disabled=${this.disabled} type=${this.type}>
         <slot></slot>
       </button>
     `;
