@@ -119,7 +119,7 @@ export class ChatActiveCall extends LitElement {
   }
 
   private tickTimer() {
-    const diff = Math.floor((Date.now() - this.callStartTime) / 1000);
+    const diff = Math.max(0, Math.floor((Date.now() - this.callStartTime) / 1000));
     const minutes = String(Math.floor(diff / 60)).padStart(2, "0");
     const seconds = String(diff % 60).padStart(2, "0");
     this.timer = `${minutes}:${seconds}`;
