@@ -31,6 +31,14 @@ export class ChatActiveCall extends LitElement {
   @property() screenSharingUser: string | null = null;
   @property({ attribute: false }) screenShareStream: MediaStream | null = null;
   @property({ type: Object }) connectionMetrics: ConnectionMetrics | null = null;
+  /**
+   * Unix epoch (seconds) at which the call started, as returned by the backend
+   * GET /voice/{room}/status `call_start_time` field.
+   * When provided, the timer is seeded from this value so all participants
+   * (including late joiners) see the same elapsed duration.
+   * Falls back to Date.now() if null.
+   */
+  @property({ type: Number }) backendCallStartTime: number | null = null;
 
   @state() private timer = "00:00";
   @state() private showVolumeSlider = false;
@@ -52,13 +60,25 @@ export class ChatActiveCall extends LitElement {
     super.disconnectedCallback();
   }
 
-  updated(changedProperties: Map<string, any>) {
+  updated(changedProperties: Map<string, unknown>) {
     if (changedProperties.has("callState")) {
       if (this.callState === "active") {
         this.startTimer();
       } else {
         this.stopTimer();
       }
+    }
+
+    // If the backend start time arrives after callState is already active
+    // (e.g. status fetch resolves after the WS join event), restart the timer
+    // so the elapsed offset is applied immediately.
+    if (
+      changedProperties.has("backendCallStartTime") &&
+      this.callState === "active" &&
+      this.backendCallStartTime != null
+    ) {
+      this.stopTimer();
+      this.startTimer();
     }
 
     if (changedProperties.has("screenShareStream") || changedProperties.has("screenSharingUser")) {
@@ -85,13 +105,24 @@ export class ChatActiveCall extends LitElement {
 
   private startTimer() {
     if (this.intervalId) return;
-    this.callStartTime = Date.now();
-    this.intervalId = setInterval(() => {
-      const diff = Math.floor((Date.now() - this.callStartTime) / 1000);
-      const minutes = String(Math.floor(diff / 60)).padStart(2, "0");
-      const seconds = String(diff % 60).padStart(2, "0");
-      this.timer = `${minutes}:${seconds}`;
-    }, 1000);
+    // Seed from backend timestamp (Unix seconds → ms) when available so that
+    // all participants — including late joiners — see the same elapsed duration.
+    // Falls back to Date.now() when no backend value is present.
+    this.callStartTime =
+      this.backendCallStartTime != null
+        ? this.backendCallStartTime * 1000
+        : Date.now();
+
+    // Render the first tick synchronously to avoid a 1-second blank flash.
+    this.tickTimer();
+    this.intervalId = setInterval(() => this.tickTimer(), 1000);
+  }
+
+  private tickTimer() {
+    const diff = Math.max(0, Math.floor((Date.now() - this.callStartTime) / 1000));
+    const minutes = String(Math.floor(diff / 60)).padStart(2, "0");
+    const seconds = String(diff % 60).padStart(2, "0");
+    this.timer = `${minutes}:${seconds}`;
   }
 
   private stopTimer() {
