@@ -106,8 +106,8 @@ export class ChatRoomComposer extends LitElement {
     const items = e.clipboardData?.items;
     if (!items || items.length === 0) return;
 
-    const imageItem = Array.from(items).find((item) =>
-      item.kind === "file" && item.type.startsWith("image/"),
+    const imageItem = Array.from(items).find(
+      (item) => item.kind === "file" && item.type.startsWith("image/"),
     );
 
     if (!imageItem) return;
@@ -194,9 +194,12 @@ export class ChatRoomComposer extends LitElement {
     const now = Date.now();
     if (now - this.lastTypingSent > this.TYPING_THROTTLE_MS) {
       this.lastTypingSent = now;
-      this.dispatchEvent(new CustomEvent("user-typing", {
-        bubbles: true, composed: true
-      }));
+      this.dispatchEvent(
+        new CustomEvent("user-typing", {
+          bubbles: true,
+          composed: true,
+        }),
+      );
     }
   }
 
@@ -212,7 +215,8 @@ export class ChatRoomComposer extends LitElement {
   }
 
   render() {
-    const canSubmit = (!this.submitting) && (Boolean(this.inputValue.trim()) || Boolean(this.selectedImage));
+    const canSubmit =
+      !this.submitting && (Boolean(this.inputValue.trim()) || Boolean(this.selectedImage));
 
     return html`
       <form class="chat-room__composer" @submit=${this.handleSubmit}>
@@ -246,7 +250,6 @@ export class ChatRoomComposer extends LitElement {
               </div>
             `
           : null}
-
         ${this.imageError
           ? html`<p class="chat-room__composer-error" role="alert">${this.imageError}</p>`
           : null}
@@ -267,6 +270,7 @@ export class ChatRoomComposer extends LitElement {
           <textarea
             class="chat-room__input"
             placeholder="Type a message..."
+            aria-label="Message text"
             rows="1"
             .value=${this.inputValue}
             ?disabled=${this.submitting}
@@ -281,8 +285,8 @@ export class ChatRoomComposer extends LitElement {
             type="button"
             ?disabled=${!canSubmit}
             @click=${this.handleSendClick}
-            title="Send"
-            aria-label="Send"
+            title=${this.submitting ? "Sending..." : (canSubmit ? "Send" : "Cannot send empty message")}
+            aria-label=${this.submitting ? "Sending..." : (canSubmit ? "Send" : "Cannot send empty message")}
           >
             ➤
           </button>
