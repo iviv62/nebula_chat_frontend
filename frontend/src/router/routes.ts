@@ -6,7 +6,10 @@ import "../pages/page-login";
 import "../pages/page-register";
 import "../pages/page-dashboard";
 import "../pages/page-chat";
+
 import "../pages/page-landing";
+import "../pages/page-profile";
+
 
 export const routes: RouteConfig[] = [
   {
@@ -28,6 +31,10 @@ export const routes: RouteConfig[] = [
   {
     path: "/chat/*",
     render: () => html`<page-chat></page-chat>`,
+  },
+  {
+    path: "/profile",
+    render: () => html`<page-profile></page-profile>`,
   },
   // Catch-all: redirect unknown paths to /chat
   {
