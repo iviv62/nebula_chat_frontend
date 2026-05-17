@@ -82,7 +82,7 @@ export class ChatRoom extends LitElement {
   @state() private _screenSharingUser: string | null = null;
   @state() private _screenShareStream: MediaStream | null = null;
   @state() private _connectionMetrics: ConnectionMetrics | null = null;
-  /** Unix epoch seconds from backend — seeds the active call timer for all participants. */
+  /** Unix epoch seconds from backend — seeds both the active-call and voice-bar timers. */
   @state() private _callStartTime: number | null = null;
 
   @watch(settingsStore)
@@ -293,8 +293,8 @@ export class ChatRoom extends LitElement {
     this._isMuted = false;
     this.webrtc.setMuted(false);
     void this.webrtc.joinCall();
-    // Fetch the authoritative call start time from the backend so the timer
-    // is seeded correctly for all participants (including late joiners).
+    // Fetch the authoritative call start time from the backend so both the
+    // active-call view and the voice-bar ribbon show the same elapsed duration.
     void this.loadCallStartTime();
   };
 
@@ -303,7 +303,7 @@ export class ChatRoom extends LitElement {
       const status = await fetchVoiceStatus(this.roomId);
       this._callStartTime = status.call_start_time;
     } catch {
-      // Non-critical: timer will fall back to local Date.now() in chat-active-call
+      // Non-critical: both components fall back to Date.now()
       this._callStartTime = null;
     }
   }
@@ -659,6 +659,7 @@ export class ChatRoom extends LitElement {
                   .participants=${this._voiceParticipants}
                   .username=${this.username}
                   .isMuted=${this._isMuted}
+                  .backendCallStartTime=${this._callStartTime}
                   @return-to-call=${this.handleReturnToCall}
                   @voice-stop=${this.handleVoiceStop}
                   @voice-dismiss=${this.handleVoiceDismiss}
