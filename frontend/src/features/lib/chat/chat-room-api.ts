@@ -32,6 +32,19 @@ export type VoiceParticipant = {
   username: string;
 };
 
+/** Shape returned by GET /voice/{room}/status */
+export type VoiceStatusResponse = {
+  room: string;
+  active: boolean;
+  participant_count: number;
+  participants: VoiceParticipant[];
+  active_sharer_id: string | null;
+  /** Unix epoch (seconds) at which the call room was created / first peer joined. */
+  call_start_time: number | null;
+  /** Seconds elapsed since the call started, computed server-side. */
+  duration: number;
+};
+
 export type UploadedImage = {
   url: string;
   filename: string;
@@ -116,6 +129,16 @@ export async function fetchConnectedUsers(room: string): Promise<ConnectedUsersS
     users,
     total: typeof data.total === "number" ? data.total : users.length,
   };
+}
+
+export async function fetchVoiceStatus(room: string): Promise<VoiceStatusResponse> {
+  const res = await fetchWithAuth(
+    `${getBase()}/voice/${encodeURIComponent(room)}/status`,
+  );
+  if (!res.ok) {
+    throw new ApiError(res.status, `Failed to fetch voice status: ${res.statusText}`);
+  }
+  return res.json();
 }
 
 export async function updateConversationLastSeen(
