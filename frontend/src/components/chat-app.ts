@@ -362,6 +362,7 @@ export class ChatApp extends LitElement {
                 class="lobby__input lobby__search-input"
                 type="text"
                 placeholder="🔍 Search..."
+                aria-label="Search rooms"
                 .value=${this.searchQuery}
                 @input=${(e: Event) => (this.searchQuery = (e.target as HTMLInputElement).value)}
               />

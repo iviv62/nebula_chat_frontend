@@ -6,3 +6,10 @@
 **Learning:** The project uses a global theming system by applying a `data-theme` attribute to the `body` tag (`body[data-theme="dark"]` and `body[data-theme="light"]`). Lit components encapsulate their styles in Shadow DOM, meaning global CSS variables defined on `:root` or `body` won't automatically propagate unless used correctly, and selectors inside shadow DOM can't natively target the body attribute directly without `:host-context`.
 
 **Action:** When creating or modifying styles for components, ensure compatibility with both light and dark themes. Use `:host-context(body[data-theme="dark"])` to scope dark-theme specific overrides inside the component's SCSS. Always define default (light theme) CSS variables and colors on the `:host`, and override them within the `:host-context` block.
+## 2024-05-16 - Contextual Tooltips for Disabled States
+**Learning:** Found a pattern where disabled buttons lacked context for screen readers and sighted users. A static `title="Send"` on a disabled send button is confusing.
+**Action:** When conditionally disabling action buttons, dynamically update both title and aria-label attributes to explain *why* the button is disabled (e.g., title=${isSubmitting ? "Sending..." : (canSubmit ? "Send" : "Cannot send empty message")}), rather than just showing it as unresponsive.
+
+## 2024-05-16 - Standalone Input Accessibility
+**Learning:** Several custom inputs (search bars, range sliders, compose textareas) across the app were missing `aria-label` attributes because they didn't have visual `<label>` elements, making them opaque to screen readers.
+**Action:** Always add an explicit `aria-label` to any `<input>` or `<textarea>` that acts as a standalone control without an associated `<label>` element.
