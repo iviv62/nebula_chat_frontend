@@ -75,7 +75,7 @@ export class ChatActiveCall extends LitElement {
     if (
       changedProperties.has("backendCallStartTime") &&
       this.callState === "active" &&
-      this.backendCallStartTime !== null
+      this.backendCallStartTime != null
     ) {
       this.stopTimer();
       this.startTimer();
