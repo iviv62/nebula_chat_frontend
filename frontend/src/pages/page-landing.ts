@@ -2,6 +2,7 @@ import { LitElement, html, unsafeCSS } from "lit";
 import { customElement } from "lit/decorators.js";
 import { handleLink } from "../utils/navigate";
 import pageLandingStylesRaw from "../styles/page-landing.styles.scss?inline";
+import "../components/ui/app-button";
 
 @customElement("page-landing")
 export class PageLanding extends LitElement {
@@ -42,8 +43,8 @@ export class PageLanding extends LitElement {
               crystal-clear voice, and tools built for the modern power user.
             </p>
             <div class="hero-actions">
-              <button class="primary-btn">Download for Windows</button>
-              <button class="secondary-btn">Open in Browser</button>
+              <app-button class="primary-btn">Download for Windows</app-button>
+              <app-button class="secondary-btn">Open in Browser</app-button>
             </div>
           </section>
 

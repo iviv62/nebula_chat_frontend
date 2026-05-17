@@ -160,33 +160,39 @@
   gap: 16px;
   margin-top: 16px;
 
-  button {
-    padding: 14px 28px;
-    border-radius: 12px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    border: none;
+  app-button {
+    --ab-light-bg: var(--secondary-bg);
+    --ab-light-color: var(--text-active);
+    --ab-light-border: var(--border-color);
+    --ab-dark-bg: var(--secondary-bg);
+    --ab-dark-color: var(--text-active);
+    --ab-dark-border: var(--border-color);
   }
 
   .primary-btn {
-    background-color: var(--primary-bg);
-    color: #ffffff;
+    --ab-light-bg: var(--primary-bg);
+    --ab-light-color: #ffffff;
+    --ab-light-border: transparent;
+    --ab-dark-bg: var(--primary-bg);
+    --ab-dark-color: #ffffff;
+    --ab-dark-border: transparent;
 
     &:hover {
-      background-color: var(--primary-bg-hover);
+      --ab-light-bg: var(--primary-bg-hover);
+      --ab-dark-bg: var(--primary-bg-hover);
     }
   }
 
   .secondary-btn {
-    background-color: var(--secondary-bg);
-    color: var(--text-active);
-    border: 1px solid var(--border-color);
-
     &:hover {
-      background-color: var(--secondary-bg-hover);
+      --ab-light-bg: var(--secondary-bg-hover);
+      --ab-dark-bg: var(--secondary-bg-hover);
     }
+  }
+
+  app-button::part(button) {
+    padding: 14px 28px;
+    border-radius: 12px;
   }
 }
 
