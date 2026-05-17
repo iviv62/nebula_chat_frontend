@@ -1,9 +1,43 @@
+:root {
+  --neb-bg: #f8fafc;
+  --neb-bg-sidebar: #f1f5f9;
+  --neb-text: #0f172a;
+  --neb-text-muted: #64748b;
+  --neb-border: rgba(0, 0, 0, 0.1);
+  --neb-border-hover: rgba(0, 0, 0, 0.15);
+  --neb-card-bg: rgba(255, 255, 255, 0.8);
+  --neb-card-hover: rgba(255, 255, 255, 1);
+  --neb-icon-bg: rgba(0, 0, 0, 0.05);
+  --neb-icon-color: #475569;
+  --neb-search-bg: rgba(0, 0, 0, 0.05);
+  --neb-btn-secondary-bg: rgba(0, 0, 0, 0.05);
+  --neb-btn-secondary-hover: rgba(0, 0, 0, 0.1);
+  --neb-btn-secondary-text: #0f172a;
+}
+
+body[data-theme="dark"] {
+  --neb-bg: #0a0c14;
+  --neb-bg-sidebar: #0a0c14;
+  --neb-text: #f8fafc;
+  --neb-text-muted: #94a3b8;
+  --neb-border: rgba(255, 255, 255, 0.05);
+  --neb-border-hover: rgba(255, 255, 255, 0.1);
+  --neb-card-bg: rgba(22, 26, 36, 0.6);
+  --neb-card-hover: rgba(255, 255, 255, 0.05);
+  --neb-icon-bg: rgba(255, 255, 255, 0.05);
+  --neb-icon-color: #94a3b8;
+  --neb-search-bg: rgba(255, 255, 255, 0.05);
+  --neb-btn-secondary-bg: rgba(255, 255, 255, 0.05);
+  --neb-btn-secondary-hover: rgba(255, 255, 255, 0.1);
+  --neb-btn-secondary-text: #ffffff;
+}
+
 .nebula-layout {
   display: grid;
   grid-template-columns: 240px 1fr 300px;
   min-height: 100vh;
-  background-color: #0a0c14;
-  color: #f8fafc;
+  background-color: var(--neb-bg);
+  color: var(--neb-text);
   font-family:
     "Inter",
     system-ui,
@@ -26,8 +60,8 @@
 
 /* Sidebar */
 .nebula-sidebar {
-  background-color: #0a0c14;
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  background-color: var(--neb-bg);
+  border-right: 1px solid var(--neb-border);
   display: flex;
   flex-direction: column;
   padding: 1.5rem 0;
@@ -56,12 +90,12 @@
       font-size: 1.1rem;
       font-weight: 700;
       margin: 0;
-      color: #f8fafc;
+      color: var(--neb-text);
     }
     p {
       font-size: 0.75rem;
       margin: 0;
-      color: #94a3b8;
+      color: var(--neb-text-muted);
     }
   }
 }
@@ -78,7 +112,7 @@
     gap: 0.75rem;
     padding: 0.75rem 1rem;
     border-radius: 8px;
-    color: #94a3b8;
+    color: var(--neb-text-muted);
     text-decoration: none;
     font-size: 0.9rem;
     font-weight: 500;
@@ -86,13 +120,13 @@
     cursor: pointer;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.05);
-      color: #f8fafc;
+      background: var(--neb-icon-bg);
+      color: var(--neb-text);
     }
 
     &.active {
       background: rgba(59, 130, 246, 0.1);
-      color: #f8fafc;
+      color: var(--neb-text);
       border: 1px solid rgba(59, 130, 246, 0.2);
     }
   }
@@ -124,7 +158,7 @@
     gap: 0.75rem;
     padding: 0.5rem 1rem;
     border-radius: 8px;
-    color: #94a3b8;
+    color: var(--neb-text-muted);
     text-decoration: none;
     font-size: 0.9rem;
     transition: all 0.2s;
@@ -134,7 +168,7 @@
       width: 24px;
       height: 24px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.1);
+      background: var(--neb-border-hover);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -155,8 +189,8 @@
     }
 
     &:hover {
-      background: rgba(255, 255, 255, 0.05);
-      color: #f8fafc;
+      background: var(--neb-icon-bg);
+      color: var(--neb-text);
     }
   }
 }
@@ -170,7 +204,7 @@
   border-radius: 8px;
   background: transparent;
   border: 1px dashed rgba(255, 255, 255, 0.2);
-  color: #94a3b8;
+  color: var(--neb-text-muted);
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
@@ -178,14 +212,14 @@
 
   &:hover {
     border-color: rgba(255, 255, 255, 0.4);
-    color: #f8fafc;
+    color: var(--neb-text);
   }
 }
 
 .nebula-sidebar-footer {
   margin-top: auto;
   padding: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--neb-border);
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -196,15 +230,15 @@
     gap: 0.75rem;
     padding: 0.75rem 1rem;
     border-radius: 8px;
-    color: #94a3b8;
+    color: var(--neb-text-muted);
     text-decoration: none;
     font-size: 0.9rem;
     transition: all 0.2s;
     cursor: pointer;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.05);
-      color: #f8fafc;
+      background: var(--neb-icon-bg);
+      color: var(--neb-text);
     }
   }
 }
@@ -223,7 +257,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 1rem 2rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--neb-border);
   background: rgba(10, 12, 20, 0.8);
   backdrop-filter: blur(16px);
   position: sticky;
@@ -245,21 +279,21 @@
       position: relative;
       display: flex;
       align-items: center;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: var(--neb-icon-bg);
+      border: 1px solid var(--neb-border-hover);
       border-radius: 20px;
       padding: 0.5rem 1rem;
       width: 300px;
 
       svg {
-        color: #94a3b8;
+        color: var(--neb-text-muted);
         margin-right: 0.5rem;
       }
 
       input {
         background: transparent;
         border: none;
-        color: #f8fafc;
+        color: var(--neb-text);
         font-size: 0.9rem;
         width: 100%;
         outline: none;
@@ -273,12 +307,12 @@
     .icon-btn {
       background: transparent;
       border: none;
-      color: #94a3b8;
+      color: var(--neb-text-muted);
       cursor: pointer;
       position: relative;
 
       &:hover {
-        color: #f8fafc;
+        color: var(--neb-text);
       }
 
       .badge {
@@ -311,7 +345,7 @@
       }
 
       svg {
-        color: #94a3b8;
+        color: var(--neb-text-muted);
       }
     }
   }
@@ -326,8 +360,8 @@
 
 /* Welcome Banner */
 .nebula-welcome {
-  background: rgba(22, 26, 36, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--neb-card-bg);
+  border: 1px solid var(--neb-border);
   border-radius: 16px;
   padding: 2rem;
   backdrop-filter: blur(16px);
@@ -339,7 +373,7 @@
   }
 
   p {
-    color: #94a3b8;
+    color: var(--neb-text-muted);
     margin: 0 0 1.5rem 0;
     font-size: 1rem;
     line-height: 1.5;
@@ -351,7 +385,7 @@
 
     .btn-primary {
       background: #3b82f6;
-      color: white;
+      color: #ffffff;
       border: none;
       padding: 0.75rem 1.25rem;
       border-radius: 8px;
@@ -369,9 +403,9 @@
     }
 
     .btn-secondary {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: white;
+      background: var(--neb-icon-bg);
+      border: 1px solid var(--neb-border-hover);
+      color: #ffffff;
       padding: 0.75rem 1.25rem;
       border-radius: 8px;
       font-size: 0.9rem;
@@ -383,7 +417,7 @@
       transition: all 0.2s;
 
       &:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: var(--neb-btn-secondary-hover);
       }
     }
   }
@@ -425,8 +459,8 @@
 }
 
 .server-card {
-  background: rgba(22, 26, 36, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--neb-card-bg);
+  border: 1px solid var(--neb-border);
   border-radius: 12px;
   padding: 1.25rem;
   backdrop-filter: blur(16px);
@@ -434,8 +468,8 @@
   transition: all 0.2s;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: var(--neb-icon-bg);
+    border-color: var(--neb-border-hover);
   }
 
   .card-header {
@@ -475,7 +509,7 @@
           align-items: center;
           gap: 0.25rem;
           font-size: 0.75rem;
-          color: #94a3b8;
+          color: var(--neb-text-muted);
 
           .dot {
             width: 6px;
@@ -488,8 +522,8 @@
     }
 
     .notification-badge {
-      background: rgba(255, 255, 255, 0.1);
-      color: #f8fafc;
+      background: var(--neb-border-hover);
+      color: var(--neb-text);
       font-size: 0.75rem;
       padding: 0.1rem 0.5rem;
       border-radius: 12px;
@@ -507,7 +541,7 @@
         width: 24px;
         height: 24px;
         border-radius: 50%;
-        border: 2px solid #161a24;
+        border: 2px solid var(--neb-bg);
         margin-left: -8px;
         background: #334155;
         &:first-child {
@@ -518,26 +552,26 @@
         width: 24px;
         height: 24px;
         border-radius: 50%;
-        background: rgba(255, 255, 255, 0.1);
+        background: var(--neb-border-hover);
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 0.65rem;
         margin-left: -8px;
-        border: 2px solid #161a24;
+        border: 2px solid var(--neb-bg);
       }
     }
 
     .recent-message {
       font-size: 0.85rem;
-      color: #94a3b8;
+      color: var(--neb-text-muted);
       margin: 0;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
 
       strong {
-        color: #f8fafc;
+        color: var(--neb-text);
       }
     }
   }
@@ -551,8 +585,8 @@
 }
 
 .trending-card {
-  background: rgba(22, 26, 36, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--neb-card-bg);
+  border: 1px solid var(--neb-border);
   border-radius: 12px;
   overflow: hidden;
   backdrop-filter: blur(16px);
@@ -573,7 +607,7 @@
 
       .tag {
         background: rgba(0, 0, 0, 0.6);
-        color: white;
+        color: #ffffff;
         font-size: 0.65rem;
         padding: 0.2rem 0.5rem;
         border-radius: 4px;
@@ -589,8 +623,8 @@
       width: 48px;
       height: 48px;
       border-radius: 12px;
-      background: #1e293b;
-      border: 2px solid #161a24;
+      background: var(--neb-card-bg);
+      border: 2px solid var(--neb-bg);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -610,7 +644,7 @@
     }
 
     p {
-      color: #94a3b8;
+      color: var(--neb-text-muted);
       font-size: 0.85rem;
       line-height: 1.4;
       margin: 0 0 1rem 0;
@@ -621,18 +655,18 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      border-top: 1px solid var(--neb-border);
       padding-top: 1rem;
 
       .members {
         font-size: 0.8rem;
-        color: #94a3b8;
+        color: var(--neb-text-muted);
       }
 
       .btn-join {
         background: transparent;
         border: 1px solid rgba(255, 255, 255, 0.2);
-        color: white;
+        color: #ffffff;
         padding: 0.4rem 1rem;
         border-radius: 16px;
         font-size: 0.8rem;
@@ -640,7 +674,7 @@
         transition: all 0.2s;
 
         &:hover {
-          background: rgba(255, 255, 255, 0.1);
+          background: var(--neb-border-hover);
         }
       }
     }
@@ -649,8 +683,8 @@
 
 /* Right Sidebar */
 .nebula-right-sidebar {
-  background-color: #0a0c14;
-  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  background-color: var(--neb-bg);
+  border-left: 1px solid var(--neb-border);
   display: flex;
   flex-direction: column;
   padding: 2rem 1.5rem;
@@ -676,8 +710,8 @@
   gap: 0.75rem;
 
   .action-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--neb-icon-bg);
+    border: 1px solid var(--neb-border);
     border-radius: 12px;
     padding: 1rem;
     display: flex;
@@ -687,18 +721,18 @@
     transition: all 0.2s;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.08);
+      background: var(--neb-card-hover);
     }
 
     .action-icon {
       width: 36px;
       height: 36px;
       border-radius: 8px;
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--neb-icon-bg);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #94a3b8;
+      color: var(--neb-text-muted);
     }
 
     .action-details {
@@ -706,7 +740,7 @@
         margin: 0 0 0.2rem 0;
         font-size: 0.9rem;
         font-weight: 500;
-        color: #f8fafc;
+        color: var(--neb-text);
       }
       p {
         margin: 0;
@@ -718,8 +752,8 @@
 }
 
 .activity-feed {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--neb-icon-bg);
+  border: 1px solid var(--neb-border);
   border-radius: 16px;
   padding: 1.5rem;
   position: relative;
@@ -743,7 +777,7 @@
   .activity-item {
     position: relative;
     padding-left: 1rem;
-    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 1px solid var(--neb-border-hover);
 
     &::before {
       content: "";
@@ -766,13 +800,13 @@
       margin-bottom: 0.25rem;
 
       .channel {
-        color: #94a3b8;
+        color: var(--neb-text-muted);
       }
     }
 
     .activity-content {
       font-size: 0.85rem;
-      color: #f8fafc;
+      color: var(--neb-text);
       line-height: 1.4;
       margin-bottom: 0.4rem;
     }
