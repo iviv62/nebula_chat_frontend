@@ -102,8 +102,8 @@ export class PageLanding extends LitElement {
             <div class="version-badge"><span class="dot"></span> Nebula v2.0 is now live</div>
             <h1 class="hero-title">Your Digital Home,<br />Reimagined.</h1>
             <p class="hero-subtitle">
-              Experience the next evolution of community chat. Immersive spaces,
-              crystal-clear voice, and tools built for the modern power user.
+              The open-source, self-hostable community chat. Immersive spaces,
+              spatial audio, and absolute control over your data—no ads, no tracking.
             </p>
             <div class="hero-actions">
               <app-button class="primary-btn">Download for Windows</app-button>
