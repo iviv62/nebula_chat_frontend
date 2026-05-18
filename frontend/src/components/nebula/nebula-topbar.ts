@@ -1,11 +1,19 @@
 import { LitElement, html } from "lit";
 import { customElement } from "lit/decorators.js";
 import { nebulaIcons } from "../../icons/icons";
+import { ThemeController } from "../../utils/theme-controller";
 
 @customElement("nebula-topbar")
 export class NebulaTopbar extends LitElement {
+  themeCtrl = new ThemeController(this);
+
   createRenderRoot() {
     return this;
+  }
+
+  private toggleTheme() {
+    const next = this.themeCtrl.theme === "light" ? "dark" : "light";
+    ThemeController.set(next);
   }
 
   render() {
@@ -23,9 +31,8 @@ export class NebulaTopbar extends LitElement {
             />
           </div>
 
-          <button class="icon-btn" aria-label="Notifications">
-            ${nebulaIcons.bell}
-            <span class="badge"></span>
+          <button class="icon-btn" aria-label="Toggle Theme" @click=${this.toggleTheme}>
+            ${this.themeCtrl.theme === "light" ? nebulaIcons.moon : nebulaIcons.sun}
           </button>
 
           <div class="user-profile">

@@ -13,6 +13,7 @@ import {
   type VoiceParticipant,
   removeMessageReaction,
   uploadChatImage,
+  fetchConnectedUsers,
 } from "../../features/lib/chat/chat-room-api";
 import type { ReactionUpdate } from "../../features/lib/chat/chat-message-adapter";
 import {

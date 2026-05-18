@@ -44,6 +44,6 @@ export class ThemeController {
 
   static get(): ThemeMode {
     const stored = browserKeyValueStorage.get(THEME_STORAGE_KEY);
-    return stored === "dark" ? "dark" : "light";
+    return stored === "light" ? "light" : "dark";
   }
 }
