@@ -203,11 +203,11 @@ export class PageLanding extends LitElement {
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                    <rect x="11" y="9" width="2" height="6" rx="1"></rect>
+                    <path d="M9 12l2 2 4-4"></path>
                   </svg>
                 </div>
-                <h3>Enterprise Security</h3>
-                <p>End-to-end encryption for DMs and robust moderation tools to keep your community safe and sound.</p>
+                <h3>100% Data Ownership</h3>
+                <p>Host Nebula on your own hardware. Your community's messages, voice data, and files stay entirely on your server—giving you absolute privacy and freedom from tech monopolies.</p>
               </div>
               <div class="feature-card">
                 <div class="icon-wrapper">
