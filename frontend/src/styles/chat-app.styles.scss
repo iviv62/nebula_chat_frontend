@@ -15,9 +15,9 @@ chat-app {
   --btn-primary-bg:          var(--color-primary);
   --btn-primary-hover:       var(--color-primary-hover);
   --btn-primary-text:        #ffffff;
-  --btn-dark-bg:             #1e3a8a;
-  --btn-dark-hover:          #172554;
-  --btn-dark-text:           #ffffff;
+  --btn-dark-bg:             var(--color-btn-dark-bg);
+  --btn-dark-hover:          var(--color-btn-dark-hover);
+  --btn-dark-text:           var(--color-btn-dark-text);
   --item-bg:                 var(--color-item-bg);
   --item-hover:              var(--color-item-hover);
   --item-selected-bg:        var(--color-item-selected-bg);

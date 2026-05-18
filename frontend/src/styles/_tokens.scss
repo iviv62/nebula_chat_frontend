@@ -1,5 +1,5 @@
 // _tokens.scss — Single source of truth for all CSS custom properties.
-// Light mode on :root; dark mode applied via the %dark-theme mixin, which is
+// Light mode on :root; dark mode applied via the dark-theme-vars mixin, which is
 // included in both the explicit selector and the prefers-color-scheme block.
 // To update a dark-mode color, change it once inside the mixin — nowhere else.
 
@@ -36,6 +36,11 @@
   --color-table-row-1:     #1e293b;
   --color-table-row-2:     #0f172a;
   --color-table-row-hover: #1e293b;
+
+  // Dark button (deep navy — dark variant is lighter for contrast on dark surfaces)
+  --color-btn-dark-bg:    #1e40af;
+  --color-btn-dark-hover: #1e3a8a;
+  --color-btn-dark-text:  #ffffff;
 
   // Misc
   --color-shadow: rgba(0, 0, 0, 0.5);
@@ -74,6 +79,11 @@
   --color-table-row-1:     #ffffff;
   --color-table-row-2:     #f8fafc;
   --color-table-row-hover: #f1f5f9;
+
+  // Dark button (deep navy — works on light surfaces too)
+  --color-btn-dark-bg:    #1e3a8a;
+  --color-btn-dark-hover: #172554;
+  --color-btn-dark-text:  #ffffff;
 
   // Misc
   --color-shadow: rgba(0, 0, 0, 0.1);
