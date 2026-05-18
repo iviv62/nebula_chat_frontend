@@ -1,0 +1,96 @@
+// _tokens.scss — Single source of truth for all CSS custom properties.
+// Light mode on :root; dark mode on body[data-theme="dark"].
+// Every component stylesheet should consume these instead of declaring its own.
+
+:root {
+  // Surfaces
+  --color-bg:           #f0f4f8;
+  --color-surface:      #ffffff;
+  --color-surface-2:    #f8fafc;
+
+  // Text
+  --color-text:         #1e293b;
+  --color-text-muted:   #475569;
+
+  // Primary accent (blue)
+  --color-primary:      #3b82f6;
+  --color-primary-hover:#2563eb;
+
+  // Borders & inputs
+  --color-border:       #e2e8f0;
+  --color-input-bg:     #ffffff;
+  --color-input-border: #cbd5e1;
+
+  // Interactive item states
+  --color-item-bg:      #ffffff;
+  --color-item-hover:   #f8fafc;
+  --color-item-selected-bg:     #eff6ff;
+  --color-item-selected-border: #3b82f6;
+
+  // Table
+  --color-table-header-bg: #f8fafc;
+  --color-table-row-1:  #ffffff;
+  --color-table-row-2:  #f8fafc;
+  --color-table-row-hover: #f1f5f9;
+
+  // Misc
+  --color-shadow:       rgba(0, 0, 0, 0.1);
+}
+
+body[data-theme="dark"] {
+  --color-bg:           #0f172a;
+  --color-surface:      #1e293b;
+  --color-surface-2:    #0f172a;
+
+  --color-text:         #f8fafc;
+  --color-text-muted:   #94a3b8;
+
+  --color-primary:      #3b82f6;
+  --color-primary-hover:#2563eb;
+
+  --color-border:       #334155;
+  --color-input-bg:     #0f172a;
+  --color-input-border: #475569;
+
+  --color-item-bg:      #1e293b;
+  --color-item-hover:   #334155;
+  --color-item-selected-bg:     #172554;
+  --color-item-selected-border: #60a5fa;
+
+  --color-table-header-bg: #0f172a;
+  --color-table-row-1:  #1e293b;
+  --color-table-row-2:  #0f172a;
+  --color-table-row-hover: #1e293b;
+
+  --color-shadow:       rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  body:not([data-theme="light"]) {
+    --color-bg:           #0f172a;
+    --color-surface:      #1e293b;
+    --color-surface-2:    #0f172a;
+
+    --color-text:         #f8fafc;
+    --color-text-muted:   #94a3b8;
+
+    --color-primary:      #3b82f6;
+    --color-primary-hover:#2563eb;
+
+    --color-border:       #334155;
+    --color-input-bg:     #0f172a;
+    --color-input-border: #475569;
+
+    --color-item-bg:      #1e293b;
+    --color-item-hover:   #334155;
+    --color-item-selected-bg:     #172554;
+    --color-item-selected-border: #60a5fa;
+
+    --color-table-header-bg: #0f172a;
+    --color-table-row-1:  #1e293b;
+    --color-table-row-2:  #0f172a;
+    --color-table-row-hover: #1e293b;
+
+    --color-shadow:       rgba(0, 0, 0, 0.5);
+  }
+}

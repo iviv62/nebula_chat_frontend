@@ -1,8 +1,13 @@
+// page-landing.styles.scss
+// Dark mode now uses :host([data-theme="dark"]) instead of the deprecated
+// :host-context(body[data-theme="dark"]). ThemeController sets data-theme on
+// both <body> and the host element, so this is equivalent and spec-compliant.
+
 :host {
   display: block;
   min-height: 100vh;
-  background-color: var(--bg-default, #f0f4f8);
-  color: var(--text-color, #111827);
+  background-color: var(--color-bg);
+  color: var(--color-text);
   font-family:
     "Inter",
     -apple-system,
@@ -12,34 +17,24 @@
     Helvetica,
     Arial,
     sans-serif;
-  --primary-color: #3b82f6;
-  --primary-bg: #3b82f6;
-  --primary-bg-hover: #2563eb;
-  --secondary-bg: #e5e7eb;
-  --secondary-bg-hover: #d1d5db;
-  --card-bg: rgba(255, 255, 255, 0.6);
-  --border-color: rgba(0, 0, 0, 0.1);
-  --text-muted: #6b7280;
-  --text-active: #111827;
-  --glass-bg: rgba(255, 255, 255, 0.7);
+  --primary-color:       var(--color-primary);
+  --primary-bg:          var(--color-primary);
+  --primary-bg-hover:    var(--color-primary-hover);
+  --secondary-bg:        var(--color-surface-2, #e5e7eb);
+  --secondary-bg-hover:  var(--color-item-hover, #d1d5db);
+  --card-bg:             rgba(255, 255, 255, 0.6);
+  --border-color:        var(--color-border);
+  --text-muted:          var(--color-text-muted);
+  --text-active:         var(--color-text);
+  --glass-bg:            rgba(255, 255, 255, 0.7);
   transition:
     background-color 0.3s,
     color 0.3s;
 }
 
-:host-context(body[data-theme="dark"]) {
-  background-color: #12141d;
-  color: #ffffff;
-  --primary-color: #a5b4fc;
-  --primary-bg: #818cf8;
-  --primary-bg-hover: #6366f1;
-  --secondary-bg: #1e212b;
-  --secondary-bg-hover: #2a2d3a;
-  --card-bg: rgba(30, 33, 43, 0.6);
-  --border-color: rgba(255, 255, 255, 0.05);
-  --text-muted: #9ca3af;
-  --text-active: #ffffff;
-  --glass-bg: rgba(20, 22, 30, 0.7);
+:host([data-theme="dark"]) {
+  --card-bg:    rgba(30, 33, 43, 0.6);
+  --glass-bg:   rgba(20, 22, 30, 0.7);
 }
 
 .landing-container {
@@ -232,7 +227,7 @@
   -webkit-backdrop-filter: blur(16px);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 
-  :host-context(body[data-theme="dark"]) & {
+  :host([data-theme="dark"]) & {
     box-shadow: none;
   }
 
@@ -290,7 +285,7 @@
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(240, 244, 248, 0.9) 100%);
     overflow: hidden;
 
-    :host-context(body[data-theme="dark"]) & {
+    :host([data-theme="dark"]) & {
       background: linear-gradient(135deg, rgba(30, 33, 43, 0.8) 0%, rgba(20, 22, 30, 0.9) 100%);
     }
 
@@ -305,7 +300,7 @@
       z-index: 0;
     }
 
-    :host-context(body[data-theme="dark"]) &::after {
+    :host([data-theme="dark"]) &::after {
       background: radial-gradient(circle at center, rgba(165, 180, 252, 0.05) 0%, transparent 70%);
     }
   }
@@ -428,7 +423,7 @@
   z-index: 1;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 
-  :host-context(body[data-theme="dark"]) & {
+  :host([data-theme="dark"]) & {
     background: rgba(15, 17, 24, 0.6);
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
@@ -440,7 +435,7 @@
   background: rgba(0, 0, 0, 0.05);
   border-right: 1px solid rgba(0, 0, 0, 0.05);
 
-  :host-context(body[data-theme="dark"]) & {
+  :host([data-theme="dark"]) & {
     background: rgba(0, 0, 0, 0.2);
     border-right: 1px solid rgba(255, 255, 255, 0.05);
   }
@@ -466,7 +461,7 @@
     opacity: 0.7;
   }
 
-  :host-context(body[data-theme="dark"]) & {
+  :host([data-theme="dark"]) & {
     background: rgba(255, 255, 255, 0.05);
   }
 }
@@ -479,7 +474,7 @@
   opacity: 0.8;
   filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3));
 
-  :host-context(body[data-theme="dark"]) & {
+  :host([data-theme="dark"]) & {
     filter: drop-shadow(0 0 10px rgba(165, 180, 252, 0.3));
   }
 }
