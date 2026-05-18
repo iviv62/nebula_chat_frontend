@@ -1,0 +1,96 @@
+// landing-background.styles.scss
+
+:host {
+  display: block;
+}
+
+// ── Space background tokens ─────────────
+.space-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition: background 0.4s;
+
+  // LIGHT theme: soft twilight sky
+  --lp-space-bg:    #dde3f5;   // soft periwinkle — daylight sky at dusk
+  --lp-nebula-1:    rgba(99,  102, 241, 0.15);  // indigo (pastel)
+  --lp-nebula-2:    rgba(59,  130, 246, 0.12);  // blue
+  --lp-nebula-3:    rgba(6,   182, 212, 0.10);  // cyan
+  --lp-nebula-4:    rgba(168,  85, 247, 0.08);  // purple
+  --lp-nebula-blur: 130px;
+  background: var(--lp-space-bg);
+}
+
+// Dark theme: deep void with rich saturated nebulae
+.space-bg[data-theme="dark"] {
+  --lp-space-bg:    #030712;   // slate-950 — true void
+  --lp-nebula-1:    rgba(139, 92,  246, 0.22);
+  --lp-nebula-2:    rgba(59,  130, 246, 0.16);
+  --lp-nebula-3:    rgba(6,   182, 212, 0.14);
+  --lp-nebula-4:    rgba(192,  38, 211, 0.12);
+  --lp-nebula-blur: 130px;
+  background: var(--lp-space-bg);
+}
+
+// ─── Space background layers ──────────────────────────────────────────────
+
+.stars-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+// Nebula blobs — Layer 2
+.nebula {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(var(--lp-nebula-blur));
+  mix-blend-mode: multiply;  // blends into light bg naturally
+  pointer-events: none;
+  z-index: 0;
+  transition: background 0.4s;
+}
+
+// In dark mode nebulae use screen blend instead
+.space-bg[data-theme="dark"] .nebula {
+  mix-blend-mode: screen;
+}
+
+.nebula-1 {
+  width: 520px; height: 520px;
+  top: -80px; left: 15%;
+  background: var(--lp-nebula-1);
+  animation: nebula-float 16s ease-in-out infinite;
+}
+.nebula-2 {
+  width: 480px; height: 480px;
+  top: 20%; right: 5%;
+  background: var(--lp-nebula-2);
+  animation: nebula-float 20s ease-in-out infinite reverse;
+}
+.nebula-3 {
+  width: 400px; height: 400px;
+  bottom: 10%; left: 5%;
+  background: var(--lp-nebula-3);
+  animation: nebula-float 14s ease-in-out infinite 4s;
+}
+.nebula-4 {
+  width: 360px; height: 360px;
+  bottom: 20%; right: 20%;
+  background: var(--lp-nebula-4);
+  animation: nebula-float 18s ease-in-out infinite 8s;
+}
+
+@keyframes nebula-float {
+  0%,  100% { transform: translateY(0px)   scale(1);    }
+  50%        { transform: translateY(-18px) scale(1.06); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nebula { animation: none; }
+}
