@@ -15,8 +15,8 @@
   height: 100%;
   padding: 0.75rem 0;
   box-sizing: border-box;
-  background: var(--color-surface);
-  border-right: 1px solid var(--color-border);
+  background: var(--neb-bg-sidebar);
+
 }
 
 /* ── Top: active room icon ── */
@@ -26,7 +26,6 @@
   align-items: center;
   padding-bottom: 0.5rem;
   margin-bottom: 0.5rem;
-  border-bottom: 1px solid var(--color-border);
   width: 100%;
 }
 
@@ -89,7 +88,6 @@
   align-items: center;
   justify-content: center;
   padding-top: 0.65rem;
-  border-top: 1px solid var(--color-border);
   width: 100%;
   margin-top: 0.5rem;
 }
