@@ -1,103 +1,25 @@
-import { LitElement, html, unsafeCSS } from "lit";
-import { customElement, state } from "lit/decorators.js";
-import { navigate, handleLink } from "../utils/navigate";
-import { login } from "../features/lib/auth/auth-api";
-import { authStore } from "../store/auth-store";
-import pageLoginStylesRaw from "../styles/page-login.styles.scss?inline";
-import { ThemeController } from "../utils/theme-controller";
+import { LitElement, html } from "lit";
+import { customElement } from "lit/decorators.js";
+import { ThemeController } from "../features/lib/theme/theme-controller";
+import { styles } from "./page-login.styles";
 
 @customElement("page-login")
 export class PageLogin extends LitElement {
-  @state() private errorMsg = "";
-  @state() private loading = false;
+  static styles = styles;
 
-  static styles = unsafeCSS(pageLoginStylesRaw);
-
-  // ThemeController is instantiated for its side effects (syncing data-theme
-  // attribute and reacting to system preference changes). The reference is
-  // kept so the controller is not garbage-collected.
-  private _theme = new ThemeController(this);
-
+  // ThemeController is instantiated purely for its side effects:
+  // it syncs data-theme on the host element and reacts to system preference
+  // changes. No reference is needed after construction.
   constructor() {
     super();
-    this.setAttribute("data-theme", ThemeController.get());
-  }
-
-  private async handleSubmit(e: Event) {
-    e.preventDefault();
-    this.errorMsg = "";
-    this.loading = true;
-
-    const form = e.target as HTMLFormElement;
-    const formData = new FormData(form);
-
-    try {
-      const accessToken = await login({
-        identifier: String(formData.get("identifier") ?? ""),
-        password: String(formData.get("password") ?? ""),
-      });
-
-      authStore.getState().setAccessToken(accessToken);
-
-      const redirect = localStorage.getItem("redirect_after_login") || "/chat";
-      localStorage.removeItem("redirect_after_login");
-      navigate(redirect);
-    } catch (err) {
-      this.errorMsg = err instanceof Error ? err.message : "Login failed.";
-    } finally {
-      this.loading = false;
-    }
+    void new ThemeController(this);
   }
 
   render() {
     return html`
-      <div class="auth-container">
-        <div class="auth-card">
-          <h2>Welcome Back</h2>
-          <p class="subtitle">Log in to continue to Chat System</p>
-
-          ${this.errorMsg ? html`<div class="error">${this.errorMsg}</div>` : ""}
-
-          <form @submit=${this.handleSubmit}>
-            <div class="form-group">
-              <label for="identifier">Email or Username</label>
-              <input
-                id="identifier"
-                type="text"
-                name="identifier"
-                placeholder="Email or Username"
-                required
-                autocomplete="username"
-              />
-            </div>
-            <div class="form-group">
-              <label for="password">Password</label>
-              <input
-                id="password"
-                type="password"
-                name="password"
-                placeholder="Password"
-                required
-                autocomplete="current-password"
-              />
-            </div>
-            <button type="submit" ?disabled=${this.loading}>
-              ${this.loading ? "Logging in…" : "Log In"}
-            </button>
-          </form>
-
-          <div class="links">
-            Don't have an account?
-            <a href="/register" @click=${handleLink}>Register here</a>
-          </div>
-        </div>
+      <div class="login-page">
+        <slot></slot>
       </div>
     `;
-  }
-}
-
-declare global {
-  interface HTMLElementTagNameMap {
-    "page-login": PageLogin;
   }
 }
