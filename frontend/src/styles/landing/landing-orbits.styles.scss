@@ -1,6 +1,10 @@
 // landing-orbits.styles.scss
+// Tokens (--lp-*) are declared on page-landing :host and inherit into this shadow root.
 
-@use './landing-tokens' as *;
+:host {
+  display: block;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
 
 .orbits-section {
   display: flex;
@@ -114,10 +118,6 @@
   svg { flex-shrink: 0; }
 }
 
-:host([data-theme="dark"]) .orbit-center {
-  box-shadow: 0 0 0 6px rgba(109, 40, 217, 0.25), 0 4px 24px rgba(109, 40, 217, 0.45);
-}
-
 .orbit-center__dot {
   position: absolute;
   bottom: 2px; right: 2px;
@@ -224,14 +224,6 @@
 .orbit-wrap:hover > .orbit-spoke {
   border-top-color: rgba(139, 92, 246, 0.85);
   border-top-width: 2px;
-}
-
-:host([data-theme='dark']) .orbit-spoke {
-  border-top-color: rgba(167, 139, 250, 0.15);
-}
-
-:host([data-theme='dark']) .orbit-wrap:hover > .orbit-spoke {
-  border-top-color: rgba(167, 139, 250, 0.80);
 }
 
 @keyframes orbit-spoke {

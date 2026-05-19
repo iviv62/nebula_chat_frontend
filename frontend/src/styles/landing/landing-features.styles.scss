@@ -1,6 +1,10 @@
 // landing-features.styles.scss
+// Tokens (--lp-*) are declared on page-landing :host and inherit into this shadow root.
 
-@use './landing-tokens' as *;
+:host {
+  display: block;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
 
 .features-grid {
   display: flex;
@@ -62,15 +66,9 @@
   justify-content: center;
   color: var(--lp-accent);
   border-radius: 10px;
-  background: rgba(99, 102, 241, 0.10);
+  background: var(--lp-icon-wrapper-bg, rgba(99, 102, 241, 0.10));
   flex-shrink: 0;
 }
-
-:host([data-theme="dark"]) .icon-wrapper {
-  background: rgba(129, 140, 248, 0.12);
-}
-
-// ─── Main feature card (mockup) ────────────────────────────────────────────
 
 .main-feature {
   padding: 0;
@@ -122,8 +120,6 @@
   }
 }
 
-// ─── Side features ─────────────────────────────────────────────────────────
-
 .side-features {
   display: flex;
   flex-direction: column;
@@ -141,34 +137,24 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    background-color: rgba(22, 163, 74, 0.10);
-    color: #16a34a;
+    background-color: var(--lp-live-bg, rgba(22, 163, 74, 0.10));
+    color: var(--lp-live-color, #16a34a);
     padding: 3px 9px;
     border-radius: 10px;
     font-size: 0.72rem;
     font-weight: 600;
-    border: 1px solid rgba(22, 163, 74, 0.18);
+    border: 1px solid var(--lp-live-border, rgba(22, 163, 74, 0.18));
     letter-spacing: 0.02em;
     text-transform: uppercase;
 
     .dot {
       width: 4px;
       height: 4px;
-      background-color: #16a34a;
+      background-color: var(--lp-live-color, #16a34a);
       border-radius: 50%;
     }
   }
 }
-
-:host([data-theme="dark"]) .live-badge {
-  background-color: rgba(52, 211, 153, 0.10);
-  color: #34d399;
-  border-color: rgba(52, 211, 153, 0.18);
-
-  .dot { background-color: #34d399; }
-}
-
-// ─── Mockup decorations ────────────────────────────────────────────────────
 
 .mockup-window {
   position: absolute;
@@ -212,13 +198,12 @@
 
 .mockup-avatar-large {
   position: absolute;
-  right: 16px;
-  bottom: 16px;
+  right: 16px; bottom: 16px;
   color: var(--lp-accent);
   opacity: 0.75;
 }
 
 @media (max-width: 900px) {
-  .top-row    { grid-template-columns: 1fr; }
+  .top-row { grid-template-columns: 1fr; }
   .bottom-row { grid-template-columns: 1fr; }
 }

@@ -1,6 +1,10 @@
 // landing-hero.styles.scss
+// Tokens (--lp-*) are declared on page-landing :host and inherit into this shadow root.
 
-@use './landing-tokens' as *;
+:host {
+  display: block;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
 
 .hero-section {
   text-align: center;
@@ -28,18 +32,9 @@
   .dot {
     width: 6px;
     height: 6px;
-    background-color: #16a34a;
+    background-color: var(--lp-badge-dot, #16a34a);
     border-radius: 50%;
-    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
-  }
-}
-
-:host([data-theme="dark"]) .version-badge {
-  background: rgba(255, 255, 255, 0.06);
-
-  .dot {
-    background-color: #34d399;
-    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.20);
+    box-shadow: 0 0 0 3px var(--lp-badge-dot-glow, rgba(22, 163, 74, 0.18));
   }
 }
 

@@ -1,13 +1,10 @@
 // landing-tokens.scss
-// Shared CSS custom-property tokens consumed by every landing sub-component.
-// Import this into each component's own SCSS file.
+// Declares all --lp-* CSS custom properties.
+// @use'd ONLY by landing-page.styles.scss — never by child components.
+// Child shadow roots inherit these tokens automatically via CSS custom property
+// inheritance through the composed light DOM tree.
 
 :host {
-  display: block;
-  color: var(--color-text);
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  transition: color 0.3s;
-
   // ── Space background tokens — LIGHT theme ─────────────────────────────
   --lp-space-bg: #dde3f5;
   --lp-nebula-1: rgba(99, 102, 241, 0.15);
@@ -35,6 +32,10 @@
   --lp-border: rgba(99, 102, 241, 0.14);
   --lp-accent: #4f46e5;
 
+  // ── Header glass buttons (light) ──────────────────────────────────────
+  --lp-toggle-bg: rgba(255, 255, 255, 0.30);
+  --lp-toggle-bg-hover: rgba(255, 255, 255, 0.50);
+
   // ── GitHub button ─────────────────────────────────────────────────────
   --lp-github-bg: #24292f;
   --lp-github-bg-hover: #32383f;
@@ -42,8 +43,15 @@
   --lp-github-border: rgba(0, 0, 0, 0.12);
   --lp-star-color: #d97706;
 
-  // ── Orbit section tokens ──────────────────────────────────────────────
-  --lp-orbit-bg: rgba(255, 255, 255, 0.55);
+  // ── Badge/live tokens (light) ─────────────────────────────────────────
+  --lp-badge-dot: #16a34a;
+  --lp-badge-dot-glow: rgba(22, 163, 74, 0.18);
+  --lp-live-bg: rgba(22, 163, 74, 0.10);
+  --lp-live-color: #16a34a;
+  --lp-live-border: rgba(22, 163, 74, 0.18);
+  --lp-icon-wrapper-bg: rgba(99, 102, 241, 0.10);
+
+  // ── Orbit tokens (light) ──────────────────────────────────────────────
   --lp-orbit-ring: rgba(99, 102, 241, 0.18);
   --lp-orbit-center-bg: #4f46e5;
   --lp-orbit-center-color: #ffffff;
@@ -54,7 +62,7 @@
   --lp-orbit-label-color: rgba(71, 85, 105, 0.55);
 }
 
-// Dark theme overrides
+// Dark theme overrides — still on :host of page-landing
 :host([data-theme="dark"]) {
   --lp-space-bg: #030712;
   --lp-nebula-1: rgba(139, 92, 246, 0.22);
@@ -80,13 +88,22 @@
   --lp-border: rgba(255, 255, 255, 0.08);
   --lp-accent: #818cf8;
 
+  --lp-toggle-bg: rgba(255, 255, 255, 0.05);
+  --lp-toggle-bg-hover: rgba(255, 255, 255, 0.10);
+
   --lp-github-bg: #2d333b;
   --lp-github-bg-hover: #3c444d;
   --lp-github-color: #cdd9e5;
   --lp-github-border: rgba(205, 217, 229, 0.12);
   --lp-star-color: #e3b341;
 
-  --lp-orbit-bg: rgba(3, 7, 18, 0.70);
+  --lp-badge-dot: #34d399;
+  --lp-badge-dot-glow: rgba(52, 211, 153, 0.20);
+  --lp-live-bg: rgba(52, 211, 153, 0.10);
+  --lp-live-color: #34d399;
+  --lp-live-border: rgba(52, 211, 153, 0.18);
+  --lp-icon-wrapper-bg: rgba(129, 140, 248, 0.12);
+
   --lp-orbit-ring: rgba(255, 255, 255, 0.08);
   --lp-orbit-center-bg: #6d28d9;
   --lp-orbit-center-color: #ffffff;

@@ -1,6 +1,10 @@
 // landing-footer.styles.scss
+// Tokens (--lp-*) are declared on page-landing :host and inherit into this shadow root.
 
-@use './landing-tokens' as *;
+:host {
+  display: block;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
 
 .landing-footer {
   display: flex;
@@ -17,6 +21,17 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--lp-text);
+
+    svg { color: var(--lp-accent); }
+  }
 
   .copyright {
     color: var(--lp-text-muted);
