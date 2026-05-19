@@ -114,6 +114,13 @@ export class ChatRoom extends LitElement {
           if (state === "idle" || state === "error") {
             this.resetVoiceUiState();
           }
+          // Re-fetch the backend start time the moment the call becomes active.
+          // This is a safety net for the race where the initial fetch (fired on
+          // handleVoiceStart) resolves before WebRTC negotiation completes and
+          // the backend hasn't yet recorded call_start_time.
+          if (state === "active" && this._callStartTime == null) {
+            void this.loadCallStartTime();
+          }
         },
         onParticipantsChange: (participants: Participant[]) => {
           this._voiceParticipants = participants as VoiceParticipant[];
@@ -395,9 +402,9 @@ export class ChatRoom extends LitElement {
   private async loadCallStartTime(): Promise<void> {
     try {
       const status = await fetchVoiceStatus(this.roomId);
-      this._callStartTime = status.call_start_time;
+      this._callStartTime = status.call_start_time ?? null;
     } catch {
-      // Non-critical: both components fall back to Date.now()
+      // Non-critical: both components fall back gracefully to Date.now().
       this._callStartTime = null;
     }
   }

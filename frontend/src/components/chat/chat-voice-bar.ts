@@ -31,7 +31,8 @@ export class ChatVoiceBar extends LitElement {
   }
 
   disconnectedCallback() {
-    this.stopTimer();
+    // Only clear the interval — do NOT reset this.timer.
+    this.clearInterval();
     super.disconnectedCallback();
   }
 
@@ -39,36 +40,47 @@ export class ChatVoiceBar extends LitElement {
     if (changedProperties.has("state")) {
       if (this.state === "active") {
         this.startTimer();
-      } else {
+      } else if (this.state === "idle" || this.state === "error") {
+        // Only fully stop (and reset display) when the call is truly over,
+        // not during intermediate states like "calling".
         this.stopTimer();
       }
     }
 
-    // Re-seed if the backend value arrives after state is already active
-    // (e.g. status fetch resolves after the WS join event).
+    // Re-seed if the backend value arrives after state is already active.
     if (
       changedProperties.has("backendCallStartTime") &&
       this.state === "active" &&
       this.backendCallStartTime != null
     ) {
-      this.stopTimer();
-      this.startTimer();
+      this.reseedTimer();
     }
   }
 
   private startTimer() {
     if (this.intervalId) return;
-    // Seed from backend timestamp (Unix seconds → ms) when available so that
-    // the ribbon stays in sync with chat-active-call and other participants.
-    // Falls back to Date.now() when no backend value is present.
     this.callStartTime =
       this.backendCallStartTime != null
         ? this.backendCallStartTime * 1000
         : Date.now();
-
     // Render first tick synchronously to avoid a 1-second blank flash.
     this.tickTimer();
     this.intervalId = setInterval(() => this.tickTimer(), 1000);
+  }
+
+  /**
+   * Re-seed from the (newly arrived) backend timestamp without stopping
+   * and restarting the interval — avoids a 1-second gap in ticking.
+   */
+  private reseedTimer() {
+    this.callStartTime =
+      this.backendCallStartTime != null
+        ? this.backendCallStartTime * 1000
+        : Date.now();
+    this.tickTimer();
+    if (!this.intervalId) {
+      this.intervalId = setInterval(() => this.tickTimer(), 1000);
+    }
   }
 
   private tickTimer() {
@@ -78,11 +90,17 @@ export class ChatVoiceBar extends LitElement {
     this.timer = `${minutes}:${seconds}`;
   }
 
-  private stopTimer() {
+  /** Clear the interval without resetting the displayed timer value. */
+  private clearInterval() {
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
     }
+  }
+
+  /** Clear the interval AND reset the displayed timer (call truly ended). */
+  private stopTimer() {
+    this.clearInterval();
     this.timer = "00:00";
   }
 

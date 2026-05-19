@@ -56,7 +56,10 @@ export class ChatActiveCall extends LitElement {
   }
 
   disconnectedCallback() {
-    this.stopTimer();
+    // Only clear the interval — do NOT reset this.timer.
+    // The parent keeps _callStartTime alive so the voice-bar ribbon can
+    // immediately resume the correct elapsed time when this view unmounts.
+    this.clearInterval();
     super.disconnectedCallback();
   }
 
@@ -64,21 +67,22 @@ export class ChatActiveCall extends LitElement {
     if (changedProperties.has("callState")) {
       if (this.callState === "active") {
         this.startTimer();
-      } else {
+      } else if (this.callState === "idle" || this.callState === "error") {
+        // Only fully stop (and reset display) when the call is truly over,
+        // not during intermediate states like "calling".
         this.stopTimer();
       }
     }
 
     // If the backend start time arrives after callState is already active
-    // (e.g. status fetch resolves after the WS join event), restart the timer
+    // (e.g. status fetch resolves after the WS join event), re-seed the timer
     // so the elapsed offset is applied immediately.
     if (
       changedProperties.has("backendCallStartTime") &&
       this.callState === "active" &&
       this.backendCallStartTime != null
     ) {
-      this.stopTimer();
-      this.startTimer();
+      this.reseedTimer();
     }
 
     if (changedProperties.has("screenShareStream") || changedProperties.has("screenSharingUser")) {
@@ -105,17 +109,29 @@ export class ChatActiveCall extends LitElement {
 
   private startTimer() {
     if (this.intervalId) return;
-    // Seed from backend timestamp (Unix seconds → ms) when available so that
-    // all participants — including late joiners — see the same elapsed duration.
-    // Falls back to Date.now() when no backend value is present.
     this.callStartTime =
       this.backendCallStartTime != null
         ? this.backendCallStartTime * 1000
         : Date.now();
-
     // Render the first tick synchronously to avoid a 1-second blank flash.
     this.tickTimer();
     this.intervalId = setInterval(() => this.tickTimer(), 1000);
+  }
+
+  /**
+   * Re-seed from the (newly arrived) backend timestamp without stopping
+   * and restarting the interval — avoids a 1-second gap in ticking.
+   */
+  private reseedTimer() {
+    this.callStartTime =
+      this.backendCallStartTime != null
+        ? this.backendCallStartTime * 1000
+        : Date.now();
+    this.tickTimer();
+    // If no interval is running yet, start one.
+    if (!this.intervalId) {
+      this.intervalId = setInterval(() => this.tickTimer(), 1000);
+    }
   }
 
   private tickTimer() {
@@ -125,11 +141,17 @@ export class ChatActiveCall extends LitElement {
     this.timer = `${minutes}:${seconds}`;
   }
 
-  private stopTimer() {
+  /** Clear the interval without resetting the displayed timer value. */
+  private clearInterval() {
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
     }
+  }
+
+  /** Clear the interval AND reset the displayed timer (call truly ended). */
+  private stopTimer() {
+    this.clearInterval();
     this.timer = "00:00";
   }
 
