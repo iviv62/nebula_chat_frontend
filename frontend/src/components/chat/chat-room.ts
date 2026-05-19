@@ -87,8 +87,14 @@ export class ChatRoom extends LitElement {
   @state() private _screenSharingUser: string | null = null;
   @state() private _screenShareStream: MediaStream | null = null;
   @state() private _connectionMetrics: ConnectionMetrics | null = null;
-  /** Unix epoch seconds from backend — seeds both the active-call and voice-bar timers. */
   @state() private _callStartTime: number | null = null;
+
+  /**
+   * Remote audio elements keyed by track.id.
+   * Created in response to onAudioTrack, cleaned up via onAudioTrackEnded.
+   * Appended to this component's shadow root — never to document.body.
+   */
+  private readonly audioElements = new Map<string, HTMLAudioElement>();
 
   @watch(settingsStore)
   private settingsState?: SettingsState;
@@ -116,11 +122,25 @@ export class ChatRoom extends LitElement {
         onParticipantsChange: (participants: Participant[]) => {
           this._voiceParticipants = participants as VoiceParticipant[];
         },
+        onAudioTrack: (track, streams) => {
+          // Guard against duplicate tracks (e.g. renegotiation).
+          if (this.audioElements.has(track.id)) return;
+          const audio = document.createElement("audio");
+          audio.autoplay = true;
+          audio.srcObject = streams[0] ?? new MediaStream([track]);
+          // Mount inside shadow root, not document.body.
+          this.shadowRoot?.appendChild(audio);
+          this.audioElements.set(track.id, audio);
+        },
+        onAudioTrackEnded: (trackId) => {
+          const audio = this.audioElements.get(trackId);
+          if (!audio) return;
+          audio.pause();
+          audio.srcObject = null;
+          audio.remove();
+          this.audioElements.delete(trackId);
+        },
         onScreenShareStarted: (stream, sharerName, isLocal) => {
-          // Always set the sharer name so the viewer mounts immediately (loading state).
-          // Only overwrite the stream if the new value is non-null — the first call from
-          // screen_share_started passes null (WS notification before WebRTC track arrives);
-          // the second call from ontrack passes the real MediaStream.
           this._screenSharingUser = sharerName.replace(" (you)", "") || this.username;
           if (stream !== null) {
             this._screenShareStream = stream;
@@ -185,13 +205,16 @@ export class ChatRoom extends LitElement {
   }
 
   disconnectedCallback(): void {
-    // Flush all pending typing timers so their callbacks don't fire into a
-    // detached component, dispatch events on a dead node, or hold this instance
-    // in memory for up to 5 s after unmount.
-    for (const timer of this.typingTimers.values()) {
-      clearTimeout(timer);
-    }
+    for (const timer of this.typingTimers.values()) clearTimeout(timer);
     this.typingTimers.clear();
+
+    // Clean up any lingering audio elements.
+    for (const audio of this.audioElements.values()) {
+      audio.pause();
+      audio.srcObject = null;
+      audio.remove();
+    }
+    this.audioElements.clear();
 
     window.removeEventListener("visibilitychange", this.boundHandleVisibilityChange);
     window.removeEventListener("focus", this.boundHandleVisibilityChange);
@@ -335,8 +358,6 @@ export class ChatRoom extends LitElement {
     this._isMuted = false;
     this.webrtc.setMuted(false);
     void this.webrtc.joinCall();
-    // Fetch the authoritative call start time from the backend so both the
-    // active-call view and the voice-bar ribbon show the same elapsed duration.
     void this.loadCallStartTime();
   };
 
@@ -345,43 +366,39 @@ export class ChatRoom extends LitElement {
       const status = await fetchVoiceStatus(this.roomId);
       this._callStartTime = status.call_start_time;
     } catch {
-      // Non-critical: both components fall back to Date.now()
       this._callStartTime = null;
     }
   }
 
-  private handleVoiceStop = () => {
-    this.webrtc.leaveCall();
-  };
+  private handleVoiceStop = () => { this.webrtc.leaveCall(); };
   private handleActiveCallVoiceStop = () => {
     this._viewingActiveCall = false;
     this.webrtc.leaveCall();
   };
-  private handleReturnToChat = () => {
-    this._viewingActiveCall = false;
-  };
-  private handleReturnToCall = () => {
-    this._viewingActiveCall = true;
-  };
-  private handleVoiceDismiss = () => {
-    this._voiceState = "idle";
-  };
+  private handleReturnToChat = () => { this._viewingActiveCall = false; };
+  private handleReturnToCall = () => { this._viewingActiveCall = true; };
+  private handleVoiceDismiss = () => { this._voiceState = "idle"; };
 
   private handleMuteToggle = (e: CustomEvent<{ muted: boolean }>) => {
     this._isMuted = e.detail.muted;
     this.webrtc.setMuted(this._isMuted);
   };
 
+  /**
+   * Volume control: iterate the audio element refs we own.
+   * No document.querySelectorAll needed.
+   */
   private handleVolumeChange = (e: CustomEvent<{ volume: number }>) => {
-    this.webrtc.setVolume(e.detail.volume);
+    const volume = Math.max(0, Math.min(1, e.detail.volume / 100));
+    for (const audio of this.audioElements.values()) {
+      audio.volume = volume;
+    }
   };
 
   private handleScreenShareToggleRequest = () => {
     void this.handleScreenShareToggle();
   };
-  private handleUserTyping = () => {
-    this.controller.sendTyping();
-  };
+  private handleUserTyping = () => { this.controller.sendTyping(); };
 
   private async handleScreenShareToggle() {
     try {
@@ -448,9 +465,7 @@ export class ChatRoom extends LitElement {
 
   private runBottomScroll(messagesEl: HTMLElement) {
     this.isAutoScrolling = true;
-    scrollMessagesToBottom(messagesEl, () => {
-      this.isAutoScrolling = false;
-    });
+    scrollMessagesToBottom(messagesEl, () => { this.isAutoScrolling = false; });
   }
 
   private markUnreadFromMessage(messageId: string) {
@@ -458,19 +473,14 @@ export class ChatRoom extends LitElement {
     this.hasUnseenMessages = true;
   }
 
-  private scheduleAutoScroll() {
-    this.pendingAutoScroll = true;
-  }
-  private scheduleScrollToUnreadBoundary() {
-    this.pendingScrollToAnchor = true;
-  }
+  private scheduleAutoScroll() { this.pendingAutoScroll = true; }
+  private scheduleScrollToUnreadBoundary() { this.pendingScrollToAnchor = true; }
   private isPageActive(): boolean {
     return document.visibilityState === "visible" && document.hasFocus();
   }
   private isMessagesNearBottom(): boolean {
     return isMessagesNearBottom(this, DEFAULT_NEAR_BOTTOM_THRESHOLD_PX);
   }
-
   private clearUnreadMarker() {
     this.unreadAnchorMessageId = null;
     this.hasUnseenMessages = false;
@@ -479,9 +489,7 @@ export class ChatRoom extends LitElement {
   private handleImagePreview(e: CustomEvent<{ url: string }>) {
     this._previewImageUrl = e.detail.url;
   }
-  private closePreview() {
-    this._previewImageUrl = null;
-  }
+  private closePreview() { this._previewImageUrl = null; }
 
   private handleMessagesScroll() {
     if (this.isAutoScrolling) return;
@@ -558,9 +566,7 @@ export class ChatRoom extends LitElement {
     return true;
   }
 
-  private scrollToLastSeen() {
-    scrollToUnreadBoundary(this, "smooth");
-  }
+  private scrollToLastSeen() { scrollToUnreadBoundary(this, "smooth"); }
   private getUnreadCount(): number {
     return getUnreadCount(this.messages, this.unreadAnchorMessageId, this.username);
   }
