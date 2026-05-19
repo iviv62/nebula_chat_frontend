@@ -13,13 +13,11 @@ export class PageLogin extends LitElement {
 
   static styles = unsafeCSS(pageLoginStylesRaw);
 
-  // ThemeController is instantiated for its side effects (syncing data-theme
-  // attribute and reacting to system preference changes). The reference is
-  // kept so the controller is not garbage-collected.
-  private _theme = new ThemeController(this);
-
   constructor() {
     super();
+    // ThemeController registers itself via addController() for side-effects only.
+    // No field binding needed — avoids TS6133 under noUnusedLocals.
+    void new ThemeController(this);
     this.setAttribute("data-theme", ThemeController.get());
   }
 
@@ -82,7 +80,7 @@ export class PageLogin extends LitElement {
               />
             </div>
             <button type="submit" ?disabled=${this.loading}>
-              ${this.loading ? "Logging in…" : "Log In"}
+              ${this.loading ? "Logging in\u2026" : "Log In"}
             </button>
           </form>
 

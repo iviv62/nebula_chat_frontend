@@ -62,8 +62,8 @@ export class WebRTCAdapter {
   private sharePcs = new Map<string, RTCPeerConnection>(); // outgoing, one per observer
   private incomingSharePc: RTCPeerConnection | null = null; // observer side
   private pendingIceCandidates: RTCIceCandidateInit[] = [];
-  /** Peer ID of the remote participant currently sharing their screen. */
-  private currentSharerPeerId: string | null = null;
+  /** Peer ID of the remote participant currently sharing their screen (null when idle). */
+  private _currentSharerPeerId: string | null = null;
   private currentSharerName: string | null = null;
 
   // ── State ───────────────────────────────────────────────────────────────────
@@ -80,12 +80,19 @@ export class WebRTCAdapter {
     this._username = config.username;
   }
 
+  // ── Public getters ───────────────────────────────────────────────────────────
+
   get isScreenSharing(): boolean {
     return this.screenTrack !== null && this.screenTrack.readyState !== "ended";
   }
 
   get peerId(): string | null {
     return this.myPeerId;
+  }
+
+  /** Peer ID of the remote participant whose screen is currently being received. */
+  get sharerPeerId(): string | null {
+    return this._currentSharerPeerId;
   }
 
   updateIdentity(room: string, username: string): void {
@@ -302,12 +309,8 @@ export class WebRTCAdapter {
       case "screen_share_started": {
         const sharerPeerId = String(msg["peer_id"] ?? "");
         if (sharerPeerId !== this.myPeerId) {
-          // Store sharer identity on the class fields so handleScreenOffer
-          // and teardown can reference them later.
-          this.currentSharerPeerId = sharerPeerId;
+          this._currentSharerPeerId = sharerPeerId;
           this.currentSharerName = String(msg["username"] ?? "");
-          // Mount the viewer immediately with stream=null so the loading state
-          // is shown while we wait for the WebRTC offer/track to arrive.
           this.events.onScreenShareStarted?.(null, this.currentSharerName, false);
           this.events.onSystemNotice?.(`${msg["username"]} started sharing their screen`);
         }
@@ -315,7 +318,7 @@ export class WebRTCAdapter {
       }
       case "screen_share_stopped": {
         const stoppedName = String(msg["username"] ?? "");
-        this.currentSharerPeerId = null;
+        this._currentSharerPeerId = null;
         this.currentSharerName = null;
         this.incomingSharePc?.close();
         this.incomingSharePc = null;
@@ -387,7 +390,7 @@ export class WebRTCAdapter {
     this.incomingSharePc?.close();
     this.incomingSharePc = null;
     this.pendingIceCandidates = [];
-    this.currentSharerPeerId = null;
+    this._currentSharerPeerId = null;
     this.currentSharerName = null;
 
     // Main audio PC
@@ -479,7 +482,7 @@ export class WebRTCAdapter {
   private async handleScreenOffer(msg: Record<string, unknown>): Promise<void> {
     const from = String(msg["from"] ?? msg["peer_id"] ?? "");
     const sdp = String(msg["sdp"] ?? "");
-    this.currentSharerPeerId = from;
+    this._currentSharerPeerId = from;
     this.currentSharerName = String(msg["username"] ?? this.currentSharerName ?? "");
 
     this.pendingIceCandidates = [];
