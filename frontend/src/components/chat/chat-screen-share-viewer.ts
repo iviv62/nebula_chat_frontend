@@ -18,7 +18,23 @@ export class ChatScreenShareViewer extends LitElement {
 
   @query(".active-call__screen-video") private videoEl?: HTMLVideoElement;
 
+  /**
+   * Handles the case where `stream` is set by the parent in the same Lit
+   * batch that creates this element (conditionally rendered from `nothing`).
+   * At that point `updated()` fires before the shadow DOM has committed, so
+   * `@query` returns undefined and `bindStream()` silently exits.
+   * `firstUpdated()` is guaranteed to run after the first render is in the
+   * DOM, so the @query resolves and the srcObject is correctly attached.
+   */
+  firstUpdated() {
+    if (this.stream) void this.bindStream();
+  }
+
   updated(changedProperties: Map<string, unknown>) {
+    // Handles all subsequent stream changes after initial mount:
+    // - remote track arriving after the viewer is already in the DOM
+    // - stream being replaced mid-share
+    // - stream cleared when sharing stops
     if (changedProperties.has("stream")) {
       void this.bindStream();
     }
