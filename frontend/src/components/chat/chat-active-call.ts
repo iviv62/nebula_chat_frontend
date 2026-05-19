@@ -18,6 +18,16 @@ import {
   iconExpand,
 } from "./chat-icons";
 
+/** Avatar palette — kept as a constant to avoid per-render allocation. */
+const AVATAR_COLORS = [
+  "#f59e0b",
+  "#3b82f6",
+  "#a855f7",
+  "#ec4899",
+  "#10b981",
+  "#ef4444",
+];
+
 @customElement("chat-active-call")
 export class ChatActiveCall extends LitElement {
   static styles = unsafeCSS(chatActiveCallStylesRaw);
@@ -48,15 +58,30 @@ export class ChatActiveCall extends LitElement {
   private intervalId: ReturnType<typeof setInterval> | null = null;
   private callStartTime = 0;
 
-  connectedCallback() {
-    super.connectedCallback();
-    if (this.callState === "active") {
-      this.startTimer();
+  /**
+   * Deduped participant map derived from `this.participants` + self.
+   * Computed as a getter so render() stays a pure projection; the underlying
+   * reactive properties already gate re-renders, so no extra allocation occurs
+   * beyond what Lit would schedule anyway.
+   */
+  private get uniqueParticipants(): VoiceParticipant[] {
+    const map = new Map<string, VoiceParticipant>();
+    map.set(this.username, { peer_id: "self", username: this.username });
+    for (const p of this.participants) {
+      if (p.username !== this.username) {
+        map.set(p.username, p);
+      }
     }
+    return Array.from(map.values());
   }
 
   disconnectedCallback() {
-    this.stopTimer();
+    // Only stop the interval; do NOT reset the display here.
+    // The timer display resets when callState transitions away from "active".
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
     super.disconnectedCallback();
   }
 
@@ -71,11 +96,13 @@ export class ChatActiveCall extends LitElement {
 
     // If the backend start time arrives after callState is already active
     // (e.g. status fetch resolves after the WS join event), restart the timer
-    // so the elapsed offset is applied immediately.
+    // so the elapsed offset is applied immediately — but only if the value
+    // actually changed to avoid a flicker on parent re-renders.
     if (
       changedProperties.has("backendCallStartTime") &&
       this.callState === "active" &&
-      this.backendCallStartTime != null
+      this.backendCallStartTime != null &&
+      this.backendCallStartTime !== this.callStartTime / 1000
     ) {
       this.stopTimer();
       this.startTimer();
@@ -88,11 +115,15 @@ export class ChatActiveCall extends LitElement {
   }
 
   private async bindScreenShareVideo() {
-    this.requestUpdate();
+    // Do NOT call this.requestUpdate() here — this method is invoked from
+    // updated(), which already ran after a reactive-property change triggered
+    // a render. A second requestUpdate() would queue a redundant render cycle.
     await this.updateComplete;
     const video = this.screenVideoEl;
     if (!video) return;
 
+    // Pause and clear before assigning a new srcObject to release held resources.
+    video.pause();
     video.srcObject = this.screenShareStream ?? null;
 
     if (!this.screenShareStream) return;
@@ -138,12 +169,11 @@ export class ChatActiveCall extends LitElement {
   }
 
   private getColorForUser(name: string) {
-    const colors = ["#f59e0b", "#3b82f6", "#a855f7", "#ec4899", "#10b981", "#ef4444"];
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
       hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
-    return colors[Math.abs(hash) % colors.length];
+    return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
   }
 
   private handleEndCall() {
@@ -176,21 +206,16 @@ export class ChatActiveCall extends LitElement {
         return;
       }
       await video.requestFullscreen();
-    } catch {
-      // No-op: fullscreen can fail on unsupported browsers or policy restrictions.
+    } catch (err) {
+      // Fullscreen can fail on unsupported browsers or policy restrictions.
+      if (import.meta.env?.DEV) {
+        console.warn("[chat-active-call] Fullscreen request failed:", err);
+      }
     }
   }
 
   render() {
     if (this.callState === "idle" || this.callState === "error") return nothing;
-
-    const uniqueParticipants = new Map<string, VoiceParticipant>();
-    uniqueParticipants.set(this.username, { peer_id: "self", username: this.username });
-    for (const p of this.participants) {
-      if (p.username !== this.username) {
-        uniqueParticipants.set(p.username, p);
-      }
-    }
 
     return html`
       <div class="active-call">
@@ -233,7 +258,7 @@ export class ChatActiveCall extends LitElement {
 
         <!-- Grid -->
         <div class="active-call__grid">
-          ${Array.from(uniqueParticipants.values()).map((p) => {
+          ${this.uniqueParticipants.map((p) => {
             const isSelf = p.username === this.username;
             const color = this.getColorForUser(p.username);
             const initials = this.getInitials(p.username);
@@ -307,9 +332,8 @@ export class ChatActiveCall extends LitElement {
             </button>
             <div class="active-call__toolbar-divider"></div>
             <button
-              class="active-call__toolbar-btn"
-              style="${this.isMuted
-                ? "background-color: #ef4444; color: white; border-color: #ef4444;"
+              class="active-call__toolbar-btn ${this.isMuted
+                ? "active-call__toolbar-btn--muted"
                 : ""}"
               title=${this.isMuted ? "Unmute microphone" : "Mute microphone"}
               aria-label=${this.isMuted ? "Unmute microphone" : "Mute microphone"}
@@ -341,31 +365,8 @@ export class ChatActiveCall extends LitElement {
                       style="position: fixed; inset: 0; z-index: 99;"
                       @click=${() => (this.showVolumeSlider = false)}
                     ></div>
-                    <div
-                      class="active-call__volume-popup"
-                      style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 8px; background-color: #1f2937; border-radius: 8px; padding: 12px 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 100;"
-                    >
-                      <span
-                        style="color: #9ca3af; font-size: 12px; font-weight: bold; margin-bottom: 8px;"
-                        >${this.volume}%</span
-                      >
-                      <style>
-                        .popup-slider::-webkit-slider-thumb {
-                          appearance: none;
-                          width: 14px;
-                          height: 14px;
-                          background: #f59e0b;
-                          border-radius: 50%;
-                          cursor: pointer;
-                        }
-                        .popup-slider::-moz-range-thumb {
-                          width: 14px;
-                          height: 14px;
-                          background: #f59e0b;
-                          border-radius: 50%;
-                          cursor: pointer;
-                        }
-                      </style>
+                    <div class="active-call__volume-popup">
+                      <span class="active-call__volume-label">${this.volume}%</span>
                       <input
                         type="range"
                         min="0"
@@ -373,8 +374,7 @@ export class ChatActiveCall extends LitElement {
                         aria-label="Volume slider"
                         .value=${String(this.volume)}
                         @input=${this.handleVolumeChange}
-                        class="popup-slider"
-                        style="appearance: none; width: 100px; height: 6px; background: #374151; accent-color: #f59e0b; border-radius: 3px; outline: none; margin: 0; transform: rotate(-90deg); transform-origin: center; margin-top: 40px; margin-bottom: 40px; cursor: pointer;"
+                        class="active-call__volume-slider"
                       />
                     </div>
                   `
