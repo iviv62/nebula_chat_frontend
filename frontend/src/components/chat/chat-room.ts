@@ -90,6 +90,13 @@ export class ChatRoom extends LitElement {
   /** Unix epoch seconds from backend — seeds both the active-call and voice-bar timers. */
   @state() private _callStartTime: number | null = null;
 
+  /**
+   * Tracks all remote audio elements this component has created, keyed by
+   * MediaStreamTrack.id. Owned entirely by this UI layer — the adapter never
+   * touches the DOM.
+   */
+  private readonly _remoteAudioElements = new Map<string, HTMLAudioElement>();
+
   @watch(settingsStore)
   private settingsState?: SettingsState;
 
@@ -115,6 +122,43 @@ export class ChatRoom extends LitElement {
         },
         onParticipantsChange: (participants: Participant[]) => {
           this._voiceParticipants = participants as VoiceParticipant[];
+        },
+        onAudioTrack: (track, safeStream) => {
+          // Deduplicate: a renegotiation can fire ontrack again for the same track.
+          if (this._remoteAudioElements.has(track.id)) return;
+
+          const audio = document.createElement("audio");
+          audio.autoplay = true;
+          audio.srcObject = safeStream;
+          // Keep the element hidden — it is purely for audio playback.
+          audio.style.display = "none";
+          // Mount inside the shadow root so it is cleaned up when this
+          // component disconnects, instead of leaking on document.body.
+          this.shadowRoot!.appendChild(audio);
+          this._remoteAudioElements.set(track.id, audio);
+
+          // When the remote peer's track ends (peer left), remove our element.
+          track.onended = () => {
+            audio.pause();
+            audio.srcObject = null;
+            audio.remove();
+            this._remoteAudioElements.delete(track.id);
+          };
+        },
+        onAudioTracksCleared: () => {
+          // Call ended — tear down every audio element we own.
+          for (const audio of this._remoteAudioElements.values()) {
+            audio.pause();
+            audio.srcObject = null;
+            audio.remove();
+          }
+          this._remoteAudioElements.clear();
+        },
+        onVolumeChange: (volume) => {
+          const clamped = Math.max(0, Math.min(1, volume / 100));
+          for (const audio of this._remoteAudioElements.values()) {
+            audio.volume = clamped;
+          }
         },
         onScreenShareStarted: (stream, sharerName, isLocal) => {
           // Always set the sharer name so the viewer mounts immediately (loading state).
