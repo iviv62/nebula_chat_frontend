@@ -12,6 +12,12 @@ export interface WebRTCAdapterConfig {
   wsBase: string;
   room: string;
   username: string;
+  /**
+   * ICE server configuration.
+   * Pass STUN + TURN credentials from your backend for production use.
+   * Falls back to Google's public STUN server if omitted (dev/test only).
+   */
+  iceServers?: RTCIceServer[];
 }
 
 export type VoiceCallState = "idle" | "calling" | "active" | "error";
@@ -20,7 +26,18 @@ export type WebRTCAdapterEvents = {
   onStatusChange?: (status: "disconnected" | "connected" | "error", message?: string) => void;
   onCallStateChange?: (state: "idle" | "calling" | "active" | "error") => void;
   onParticipantsChange?: (participants: Participant[]) => void;
-  onAudioTrack?: (track: MediaStreamTrack, streams: readonly MediaStream[]) => void;
+  /**
+   * Fired when a remote audio track is received.
+   *
+   * `safeStream` is a single-track MediaStream wrapping `track` — safe to
+   * assign directly to an <audio> element's srcObject. The adapter creates
+   * it here so callers never have to reason about whether streams[0] from
+   * RTCTrackEvent is populated (it varies by SFU implementation).
+   *
+   * The UI layer owns the <audio> element lifecycle: create, append to
+   * document.body, play, and clean up when the track ends.
+   */
+  onAudioTrack?: (track: MediaStreamTrack, safeStream: MediaStream) => void;
   onScreenShareStarted?: (stream: MediaStream | null, sharerName: string, isLocal: boolean) => void;
   onScreenShareStopped?: () => void;
   onSystemNotice?: (text: string) => void;
@@ -28,18 +45,17 @@ export type WebRTCAdapterEvents = {
   onConnectionMetrics?: (metrics: ConnectionMetrics) => void;
 };
 
-const ICE_SERVERS: RTCIceServer[] = [{ urls: "stun:stun.l.google.com:19302" }];
+/** Fallback STUN — dev/test only. Pass iceServers via config in production. */
+const FALLBACK_ICE_SERVERS: RTCIceServer[] = [{ urls: "stun:stun.l.google.com:19302" }];
 
 /**
  * Unified WebRTC adapter — owns:
  *  - The main audio SFU RTCPeerConnection (server-offer flow)
  *  - P2P screen-share mesh (client-offer, WS-relayed signaling)
  *  - Participant state tracking
- *  - Remote audio element lifecycle
  *
- * The WS connection itself stays in ChatRoomController for chat/presence;
- * this adapter receives already-parsed voice events via handleVoiceEvent()
- * and sends WS voice signals back via the onVoiceSignal callback.
+ * This class makes NO direct document.* calls. All UI side-effects are
+ * delegated to the caller via events.
  */
 export class WebRTCAdapter {
   // ── Main audio PC ───────────────────────────────────────────────────────────
@@ -59,10 +75,9 @@ export class WebRTCAdapter {
   // ── Screen share (P2P mesh) ─────────────────────────────────────────────────
   private screenStream: MediaStream | null = null;
   private screenTrack: MediaStreamTrack | null = null;
-  private sharePcs = new Map<string, RTCPeerConnection>(); // outgoing, one per observer
-  private incomingSharePc: RTCPeerConnection | null = null; // observer side
+  private sharePcs = new Map<string, RTCPeerConnection>();
+  private incomingSharePc: RTCPeerConnection | null = null;
   private pendingIceCandidates: RTCIceCandidateInit[] = [];
-  /** Peer ID of the remote participant currently sharing their screen (null when idle). */
   private _currentSharerPeerId: string | null = null;
   private currentSharerName: string | null = null;
 
@@ -90,7 +105,6 @@ export class WebRTCAdapter {
     return this.myPeerId;
   }
 
-  /** Peer ID of the remote participant whose screen is currently being received. */
   get sharerPeerId(): string | null {
     return this._currentSharerPeerId;
   }
@@ -119,7 +133,6 @@ export class WebRTCAdapter {
     this.micStream.getTracks().forEach((t) => this.pc!.addTrack(t, this.micStream!));
 
     try {
-      // Server-offer flow: POST /voice/join → server returns offer + peer_id
       const joinRes = await fetchWithAuth(`${this.config.baseUrl}/voice/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -146,7 +159,6 @@ export class WebRTCAdapter {
       });
       if (!answerRes.ok) throw new Error(`Answer rejected: ${answerRes.status}`);
 
-      // Notify WS that this peer is now registered
       this.sendSignal({
         type: "voice",
         event: "peer_registered",
@@ -154,8 +166,7 @@ export class WebRTCAdapter {
         room: this._room,
       });
 
-      const participants = joinData.participants ?? [];
-      this.setParticipants(participants);
+      this.setParticipants(joinData.participants ?? []);
       this.setCallState("active");
     } catch (err) {
       console.error("[WebRTCAdapter] joinCall failed", err);
@@ -191,12 +202,24 @@ export class WebRTCAdapter {
     }
 
     const [track] = this.screenStream.getVideoTracks();
-    if (!track) return;
+    if (!track) {
+      this.screenStream.getTracks().forEach((t) => t.stop());
+      this.screenStream = null;
+      return;
+    }
     this.screenTrack = track;
     track.onended = () => this.stopScreenShare();
 
     const observerIds = this.currentParticipants.map((p) => p.peer_id).filter(Boolean);
-    for (const id of observerIds) await this.openSharePcTo(id);
+    const results = await Promise.allSettled(observerIds.map((id) => this.openSharePcTo(id)));
+    results.forEach((result, i) => {
+      if (result.status === "rejected") {
+        console.warn(
+          `[WebRTCAdapter] startScreenShare: failed to open share PC to peer ${observerIds[i]}`,
+          result.reason,
+        );
+      }
+    });
 
     this.sendSignal({
       type: "voice",
@@ -242,14 +265,9 @@ export class WebRTCAdapter {
   setMonitorEnabled(enabled: boolean): void {
     this.isMonitorEnabled = enabled;
     if (!this.pc) return;
-
     if (enabled) {
-      if (!this.monitor) {
-        this.monitor = new ConnectionMonitor(this.pc);
-      }
-      this.monitor.startMonitoring((metrics) => {
-        this.events.onConnectionMetrics?.(metrics);
-      });
+      if (!this.monitor) this.monitor = new ConnectionMonitor(this.pc);
+      this.monitor.startMonitoring((metrics) => this.events.onConnectionMetrics?.(metrics));
     } else {
       this.monitor?.stopMonitoring();
       this.monitor = null;
@@ -262,35 +280,27 @@ export class WebRTCAdapter {
 
     switch (event) {
       case "call_started": {
-        const participants = (msg["participants"] as Participant[] | undefined) ?? [];
-        this.setParticipants(participants);
+        this.setParticipants((msg["participants"] as Participant[] | undefined) ?? []);
         this.events.onSystemNotice?.(`${msg["username"]} started a voice call`);
         break;
       }
       case "peer_joined": {
-        const participants = (msg["participants"] as Participant[] | undefined) ?? [];
-        this.setParticipants(participants);
+        this.setParticipants((msg["participants"] as Participant[] | undefined) ?? []);
         this.events.onSystemNotice?.(`${msg["username"]} joined the voice call`);
-        // Late-joiner mesh: open a share PC to them if we are already sharing
         const newPeerId = String(msg["peer_id"] ?? "");
         if (this.isScreenSharing && newPeerId && newPeerId !== this.myPeerId) {
           this.openSharePcTo(newPeerId).catch((err) =>
-            console.error("[WebRTCAdapter] late joiner screen share failed", err),
+            console.warn("[WebRTCAdapter] late joiner screen share failed", err),
           );
         }
         break;
       }
       case "peer_left": {
-        const participants = (msg["participants"] as Participant[] | undefined) ?? [];
-        this.setParticipants(participants);
+        this.setParticipants((msg["participants"] as Participant[] | undefined) ?? []);
         this.events.onSystemNotice?.(`${msg["username"]} left the voice call`);
-        // Clean up any outgoing share PC to that peer
         const leftPeerId = String(msg["peer_id"] ?? "");
         const spc = this.sharePcs.get(leftPeerId);
-        if (spc) {
-          spc.close();
-          this.sharePcs.delete(leftPeerId);
-        }
+        if (spc) { spc.close(); this.sharePcs.delete(leftPeerId); }
         break;
       }
       case "call_ended": {
@@ -345,26 +355,22 @@ export class WebRTCAdapter {
     }
   }
 
-  // ── Mute / volume ───────────────────────────────────────────────────────────
+  // ── Mute ────────────────────────────────────────────────────────────────────
   setMuted(muted: boolean): void {
     this._isMuted = muted;
-    this.micStream?.getAudioTracks().forEach((t) => {
-      t.enabled = !muted;
-    });
+    this.micStream?.getAudioTracks().forEach((t) => { t.enabled = !muted; });
   }
 
-  setVolume(volume: number): void {
-    document.querySelectorAll<HTMLAudioElement>("audio[data-webrtc-stream]").forEach((el) => {
-      el.volume = Math.max(0, Math.min(1, volume / 100));
-    });
-  }
-
-  // ── Full teardown ───────────────────────────────────────────────────────────
+  // ── Destroy ─────────────────────────────────────────────────────────────────
   destroy(): void {
     this.teardown();
   }
 
   // ── Private helpers ─────────────────────────────────────────────────────────
+
+  private get iceServers(): RTCIceServer[] {
+    return this.config.iceServers ?? FALLBACK_ICE_SERVERS;
+  }
 
   private setCallState(state: VoiceCallState): void {
     this.callState = state;
@@ -381,7 +387,8 @@ export class WebRTCAdapter {
   }
 
   private teardown(): void {
-    // Screen share
+    const wasScreenActive = this.isScreenSharing || this._currentSharerPeerId !== null;
+
     this.screenTrack?.stop();
     this.screenTrack = null;
     this.screenStream = null;
@@ -393,7 +400,6 @@ export class WebRTCAdapter {
     this._currentSharerPeerId = null;
     this.currentSharerName = null;
 
-    // Main audio PC
     this.monitor?.stopMonitoring();
     this.monitor = null;
     this.micStream?.getTracks().forEach((t) => t.stop());
@@ -401,41 +407,29 @@ export class WebRTCAdapter {
     this.pc?.close();
     this.pc = null;
 
-    // Remote audio elements
-    document.querySelectorAll("audio[data-webrtc-stream]").forEach((el) => el.remove());
-
     this.myPeerId = null;
     this.setParticipants([]);
     this.setCallState("idle");
-    this.events.onScreenShareStopped?.();
+
+    if (wasScreenActive) {
+      this.events.onScreenShareStopped?.();
+    }
   }
 
   private createMainPc(): RTCPeerConnection {
-    const peer = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    const peer = new RTCPeerConnection({ iceServers: this.iceServers });
 
     if (this.isMonitorEnabled) {
       this.monitor = new ConnectionMonitor(peer);
-      this.monitor.startMonitoring((metrics) => {
-        this.events.onConnectionMetrics?.(metrics);
-      });
+      this.monitor.startMonitoring((metrics) => this.events.onConnectionMetrics?.(metrics));
     }
 
-    peer.ontrack = ({ track, streams }) => {
+    peer.ontrack = ({ track }) => {
       if (track.kind !== "audio") return;
-
-      this.events.onAudioTrack?.(track, streams);
-
-      const singleTrackStream = new MediaStream([track]);
-      if (document.querySelector(`audio[data-webrtc-stream="${track.id}"]`)) return;
-
-      const audio = document.createElement("audio");
-      audio.autoplay = true;
-      audio.dataset["webrtcStream"] = track.id;
-      audio.srcObject = singleTrackStream;
-      audio.style.display = "none";
-      document.body.appendChild(audio);
-
-      track.onended = () => audio.remove();
+      // Wrap into a guaranteed single-track stream — safe regardless of SFU behaviour.
+      // The UI layer owns the <audio> element; this adapter stays DOM-free.
+      const safeStream = new MediaStream([track]);
+      this.events.onAudioTrack?.(track, safeStream);
     };
 
     peer.oniceconnectionstatechange = () => {
@@ -450,11 +444,10 @@ export class WebRTCAdapter {
   // ── P2P screen share: sharer side ──────────────────────────────────────────
   private async openSharePcTo(observerPeerId: string): Promise<void> {
     if (!this.screenTrack || !this.screenStream) return;
-    const spc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    const spc = new RTCPeerConnection({ iceServers: this.iceServers });
     this.sharePcs.set(observerPeerId, spc);
 
     spc.addTrack(this.screenTrack, this.screenStream);
-
     spc.onicecandidate = ({ candidate }) => {
       if (candidate) {
         this.sendSignal({
@@ -487,7 +480,7 @@ export class WebRTCAdapter {
 
     this.pendingIceCandidates = [];
     this.incomingSharePc?.close();
-    this.incomingSharePc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    this.incomingSharePc = new RTCPeerConnection({ iceServers: this.iceServers });
 
     this.incomingSharePc.ontrack = ({ track, streams }) => {
       const stream = streams[0] ?? new MediaStream([track]);
@@ -510,7 +503,9 @@ export class WebRTCAdapter {
     await this.incomingSharePc.setRemoteDescription({ type: "offer", sdp });
 
     for (const c of this.pendingIceCandidates) {
-      await this.incomingSharePc.addIceCandidate(c).catch(() => {});
+      await this.incomingSharePc
+        .addIceCandidate(c)
+        .catch((err) => console.warn("[WebRTCAdapter] failed to add buffered ICE candidate", err));
     }
     this.pendingIceCandidates = [];
 
@@ -539,7 +534,9 @@ export class WebRTCAdapter {
 
     const outgoing = this.sharePcs.get(from);
     if (outgoing) {
-      await outgoing.addIceCandidate(candidate).catch(() => {});
+      await outgoing
+        .addIceCandidate(candidate)
+        .catch((err) => console.warn("[WebRTCAdapter] outgoing ICE candidate failed", err));
       return;
     }
     if (this.incomingSharePc) {
@@ -547,7 +544,9 @@ export class WebRTCAdapter {
         this.pendingIceCandidates.push(candidate);
         return;
       }
-      await this.incomingSharePc.addIceCandidate(candidate).catch(() => {});
+      await this.incomingSharePc
+        .addIceCandidate(candidate)
+        .catch((err) => console.warn("[WebRTCAdapter] incoming ICE candidate failed", err));
     }
   }
 }
