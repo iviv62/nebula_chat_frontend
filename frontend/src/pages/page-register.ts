@@ -12,7 +12,10 @@ export class PageRegister extends LitElement {
 
   static styles = unsafeCSS(pageRegisterStylesRaw);
 
-  private theme = new ThemeController(this);
+  // ThemeController is instantiated for its side effects (syncing data-theme
+  // attribute and reacting to system preference changes). The reference is
+  // kept so the controller is not garbage-collected.
+  private _theme = new ThemeController(this);
 
   constructor() {
     super();
@@ -86,7 +89,7 @@ export class PageRegister extends LitElement {
               />
             </div>
             <button type="submit" ?disabled=${this.loading}>
-              ${this.loading ? "Registering\u2026" : "Register"}
+              ${this.loading ? "Registering…" : "Register"}
             </button>
           </form>
 

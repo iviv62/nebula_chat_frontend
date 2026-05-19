@@ -2,7 +2,6 @@ import { LitElement, html, unsafeCSS } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { watch } from "zustand-lit";
 import { fetchCurrentUser, tryRefreshSession } from "../features/lib/auth/auth-api";
-import { fetchConnectedUsers } from "../features/lib/chat/chat-room-api";
 import { authStore } from "../store/auth-store";
 import type { AuthState } from "../store/auth-store";
 import { navigate } from "../utils/navigate";
