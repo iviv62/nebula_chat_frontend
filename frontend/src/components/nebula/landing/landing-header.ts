@@ -1,7 +1,8 @@
-import { LitElement, html, css } from "lit";
+import { LitElement, html, unsafeCSS } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { handleLink } from "../../../utils/navigate";
 import { sunIcon, moonIcon, logoIcon } from "./landing-icons";
+import headerStylesRaw from "../../../../styles/landing/landing-header.styles.scss?inline";
 
 /**
  * <landing-header theme="dark|light">
@@ -12,9 +13,7 @@ import { sunIcon, moonIcon, logoIcon } from "./landing-icons";
  */
 @customElement("landing-header")
 export class LandingHeader extends LitElement {
-  static styles = css`
-    :host { display: block; }
-  `;
+  static styles = unsafeCSS(headerStylesRaw);
 
   @property({ type: String, reflect: true })
   theme: "dark" | "light" = "dark";

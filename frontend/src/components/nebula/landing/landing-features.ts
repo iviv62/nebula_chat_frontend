@@ -1,5 +1,6 @@
-import { LitElement, html, css } from "lit";
+import { LitElement, html, unsafeCSS } from "lit";
 import { customElement } from "lit/decorators.js";
+import featuresStylesRaw from "../../../../styles/landing/landing-features.styles.scss?inline";
 
 /**
  * <landing-features>
@@ -8,9 +9,7 @@ import { customElement } from "lit/decorators.js";
  */
 @customElement("landing-features")
 export class LandingFeatures extends LitElement {
-  static styles = css`
-    :host { display: block; }
-  `;
+  static styles = unsafeCSS(featuresStylesRaw);
 
   render() {
     return html`
@@ -107,7 +106,7 @@ export class LandingFeatures extends LitElement {
               </svg>
             </div>
             <h3>100% Data Ownership</h3>
-            <p>Host Nebula on your own hardware. Your community’s messages, voice data, and files stay entirely on your server—giving you absolute privacy and freedom from tech monopolies.</p>
+            <p>Host Nebula on your own hardware. Your community's messages, voice data, and files stay entirely on your server—giving you absolute privacy and freedom from tech monopolies.</p>
           </div>
           <div class="feature-card">
             <div class="icon-wrapper">

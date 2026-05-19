@@ -1,6 +1,7 @@
-import { LitElement, html, css } from "lit";
+import { LitElement, html, unsafeCSS } from "lit";
 import { customElement } from "lit/decorators.js";
 import { logoIconSm } from "./landing-icons";
+import footerStylesRaw from "../../../../styles/landing/landing-footer.styles.scss?inline";
 
 /**
  * <landing-footer>
@@ -9,9 +10,7 @@ import { logoIconSm } from "./landing-icons";
  */
 @customElement("landing-footer")
 export class LandingFooter extends LitElement {
-  static styles = css`
-    :host { display: block; }
-  `;
+  static styles = unsafeCSS(footerStylesRaw);
 
   render() {
     return html`

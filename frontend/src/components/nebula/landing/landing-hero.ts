@@ -1,7 +1,8 @@
-import { LitElement, html, css } from "lit";
+import { LitElement, html, unsafeCSS } from "lit";
 import { customElement } from "lit/decorators.js";
 import { githubStarIcon, starIcon } from "./landing-icons";
 import "../../ui/app-button";
+import heroStylesRaw from "../../../../styles/landing/landing-hero.styles.scss?inline";
 
 /**
  * <landing-hero>
@@ -10,9 +11,7 @@ import "../../ui/app-button";
  */
 @customElement("landing-hero")
 export class LandingHero extends LitElement {
-  static styles = css`
-    :host { display: block; }
-  `;
+  static styles = unsafeCSS(heroStylesRaw);
 
   render() {
     return html`

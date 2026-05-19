@@ -1,7 +1,8 @@
-import { LitElement, html, css } from "lit";
+import { LitElement, html, unsafeCSS } from "lit";
 import { customElement } from "lit/decorators.js";
 import { ORBIT_USERS } from "./landing-orbit-data";
 import { userIcon } from "./landing-icons";
+import orbitsStylesRaw from "../../../../styles/landing/landing-orbits.styles.scss?inline";
 
 /**
  * <landing-orbits>
@@ -12,98 +13,7 @@ import { userIcon } from "./landing-icons";
  */
 @customElement("landing-orbits")
 export class LandingOrbits extends LitElement {
-  static styles = css`
-    :host { display: block; }
-
-    .orbit-wrap {
-      position: absolute;
-      inset: 0;
-      margin: auto;
-      width: 0;
-      height: 0;
-      animation: orbit-spin var(--orbit-speed, 60s) linear infinite;
-      animation-delay: var(--orbit-delay, 0s);
-    }
-
-    @keyframes orbit-spin {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(360deg); }
-    }
-
-    .orbit-spoke {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: var(--orbit-r, 156px);
-      height: 1px;
-      transform-origin: 0 0;
-      background: repeating-linear-gradient(
-        90deg,
-        transparent 0,
-        transparent 4px,
-        color-mix(in srgb, currentColor 25%, transparent) 4px,
-        color-mix(in srgb, currentColor 25%, transparent) 8px
-      );
-      pointer-events: none;
-    }
-
-    .orbit-avatar {
-      position: absolute;
-      top: 50%;
-      left: var(--orbit-r, 156px);
-      transform: translateY(-50%) rotate(calc(-1 * var(--orbit-speed, 60s) * 0deg));
-      animation: orbit-counter var(--orbit-speed, 60s) linear infinite;
-      animation-delay: var(--orbit-delay, 0s);
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      overflow: hidden;
-      border: 2px solid var(--color-border, #334155);
-      background: var(--color-surface, #1c1b19);
-      padding: 0;
-      cursor: pointer;
-    }
-
-    @keyframes orbit-counter {
-      from { transform: translateY(-50%) rotate(0deg); }
-      to   { transform: translateY(-50%) rotate(-360deg); }
-    }
-
-    .orbit-avatar__photo {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 50%;
-    }
-
-    .orbit-avatar__badge {
-      position: absolute;
-      bottom: -2px;
-      right: -2px;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: var(--color-primary, #01696f);
-      color: #fff;
-      font-size: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      border: 1px solid var(--color-bg, #171614);
-    }
-
-    .orbit-avatar__online {
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--color-success, #437a22);
-      border: 2px solid var(--color-bg, #171614);
-    }
-  `;
+  static styles = unsafeCSS(orbitsStylesRaw);
 
   render() {
     return html`
@@ -156,8 +66,8 @@ export class LandingOrbits extends LitElement {
                     class="orbit-avatar__photo"
                     src=${u.avatar}
                     alt=${u.name}
-                    width="40"
-                    height="40"
+                    width="52"
+                    height="52"
                     loading="lazy"
                     draggable="false"
                   />

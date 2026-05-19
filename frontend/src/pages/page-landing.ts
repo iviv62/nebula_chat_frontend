@@ -1,6 +1,6 @@
 import { LitElement, html, unsafeCSS } from "lit";
 import { customElement } from "lit/decorators.js";
-import pageLandingStylesRaw from "../styles/page-landing.styles.scss?inline";
+import pageLandingStylesRaw from "../styles/landing/landing-page.styles.scss?inline";
 import { ThemeController } from "../utils/theme-controller";
 
 // Register sub-components
