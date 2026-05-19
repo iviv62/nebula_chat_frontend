@@ -54,17 +54,18 @@ export class ChatActiveCall extends LitElement {
   @state() private showVolumeSlider = false;
   @state() private volume = 80;
   @state() private isScreenShareLoading = false;
+  /**
+   * Cached, deduped participant list. Recomputed in updated() only when
+   * `participants` or `username` changes — NOT on every timer tick.
+   * This prevents a Map + Array.from() allocation every second.
+   */
+  @state() private _uniqueParticipants: VoiceParticipant[] = [];
+
   @query(".active-call__screen-video") private screenVideoEl?: HTMLVideoElement;
   private intervalId: ReturnType<typeof setInterval> | null = null;
   private callStartTime = 0;
 
-  /**
-   * Deduped participant map derived from `this.participants` + self.
-   * Computed as a getter so render() stays a pure projection; the underlying
-   * reactive properties already gate re-renders, so no extra allocation occurs
-   * beyond what Lit would schedule anyway.
-   */
-  private get uniqueParticipants(): VoiceParticipant[] {
+  private rebuildUniqueParticipants() {
     const map = new Map<string, VoiceParticipant>();
     map.set(this.username, { peer_id: "self", username: this.username });
     for (const p of this.participants) {
@@ -72,7 +73,7 @@ export class ChatActiveCall extends LitElement {
         map.set(p.username, p);
       }
     }
-    return Array.from(map.values());
+    this._uniqueParticipants = Array.from(map.values());
   }
 
   disconnectedCallback() {
@@ -86,6 +87,13 @@ export class ChatActiveCall extends LitElement {
   }
 
   updated(changedProperties: Map<string, unknown>) {
+    // Rebuild the deduped participant list only when the source data changes,
+    // not on every timer tick. This avoids a Map + Array.from() allocation
+    // every second.
+    if (changedProperties.has("participants") || changedProperties.has("username")) {
+      this.rebuildUniqueParticipants();
+    }
+
     if (changedProperties.has("callState")) {
       if (this.callState === "active") {
         this.startTimer();
@@ -258,7 +266,7 @@ export class ChatActiveCall extends LitElement {
 
         <!-- Grid -->
         <div class="active-call__grid">
-          ${this.uniqueParticipants.map((p) => {
+          ${this._uniqueParticipants.map((p) => {
             const isSelf = p.username === this.username;
             const color = this.getColorForUser(p.username);
             const initials = this.getInitials(p.username);
