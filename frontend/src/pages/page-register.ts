@@ -12,10 +12,11 @@ export class PageRegister extends LitElement {
 
   static styles = unsafeCSS(pageRegisterStylesRaw);
 
-  private theme = new ThemeController(this);
-
   constructor() {
     super();
+    // ThemeController registers itself via addController() for side-effects only.
+    // No field binding needed — avoids TS6133 under noUnusedLocals.
+    void new ThemeController(this);
     this.setAttribute("data-theme", ThemeController.get());
   }
 

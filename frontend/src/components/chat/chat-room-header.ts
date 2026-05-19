@@ -1,7 +1,7 @@
 import { LitElement, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import type { VoiceCallState } from "../../features/lib/chat/webrtc-adapter";
-import { iconPhone, iconVideo, iconUsers } from "./chat-icons";
+import { iconPhone, iconVideo } from "./chat-icons";
 
 @customElement("chat-room-header")
 export class ChatRoomHeader extends LitElement {
@@ -39,9 +39,6 @@ export class ChatRoomHeader extends LitElement {
     this.dispatchEvent(new CustomEvent(event, { bubbles: true, composed: true }));
   }
 
-  private handleToggleMembersClick() {
-    this.dispatchEvent(new CustomEvent("toggle-members", { bubbles: true, composed: true }));
-  }
 
   render() {
     return html`
@@ -73,8 +70,8 @@ export class ChatRoomHeader extends LitElement {
             >
               ${iconVideo}
             </button>
-          </div>
 
+          </div>
         </div>
       </header>
 
