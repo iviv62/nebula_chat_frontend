@@ -1,1 +1,101 @@
-placeholder — fetching real content next
+import { LitElement, html, unsafeCSS } from "lit";
+import { customElement, state } from "lit/decorators.js";
+import { navigate, handleLink } from "../utils/navigate";
+import { login } from "../features/lib/auth/auth-api";
+import { authStore } from "../store/auth-store";
+import pageLoginStylesRaw from "../styles/page-login.styles.scss?inline";
+import { ThemeController } from "../utils/theme-controller";
+
+@customElement("page-login")
+export class PageLogin extends LitElement {
+  @state() private errorMsg = "";
+  @state() private loading = false;
+
+  static styles = unsafeCSS(pageLoginStylesRaw);
+
+  constructor() {
+    super();
+    // ThemeController registers itself via addController() for side-effects only.
+    // No field binding needed — avoids TS6133 under noUnusedLocals.
+    void new ThemeController(this);
+    this.setAttribute("data-theme", ThemeController.get());
+  }
+
+  private async handleSubmit(e: Event) {
+    e.preventDefault();
+    this.errorMsg = "";
+    this.loading = true;
+
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+
+    try {
+      const accessToken = await login({
+        identifier: String(formData.get("identifier") ?? ""),
+        password: String(formData.get("password") ?? ""),
+      });
+
+      authStore.getState().setAccessToken(accessToken);
+
+      const redirect = localStorage.getItem("redirect_after_login") || "/chat";
+      localStorage.removeItem("redirect_after_login");
+      navigate(redirect);
+    } catch (err) {
+      this.errorMsg = err instanceof Error ? err.message : "Login failed.";
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  render() {
+    return html`
+      <div class="auth-container">
+        <div class="auth-card">
+          <h2>Welcome Back</h2>
+          <p class="subtitle">Log in to continue to Chat System</p>
+
+          ${this.errorMsg ? html`<div class="error">${this.errorMsg}</div>` : ""}
+
+          <form @submit=${this.handleSubmit}>
+            <div class="form-group">
+              <label for="identifier">Email or Username</label>
+              <input
+                id="identifier"
+                type="text"
+                name="identifier"
+                placeholder="Email or Username"
+                required
+                autocomplete="username"
+              />
+            </div>
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                name="password"
+                placeholder="Password"
+                required
+                autocomplete="current-password"
+              />
+            </div>
+            <button type="submit" ?disabled=${this.loading}>
+              ${this.loading ? "Logging in\u2026" : "Log In"}
+            </button>
+          </form>
+
+          <div class="links">
+            Don't have an account?
+            <a href="/register" @click=${handleLink}>Register here</a>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "page-login": PageLogin;
+  }
+}
