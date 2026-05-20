@@ -603,7 +603,7 @@
   }
 }
 
-/* Trending Grid */
+/* Trending / Popular Articles Grid */
 .trending-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -924,3 +924,4 @@
 }
 
 @import "./create-server-modal.styles.scss";
+@import "./nebula-article-card.styles.scss";
