@@ -12,13 +12,13 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--cr-meta-color, #64748b);
+  color: var(--cr-meta-color, var(--color-text-muted));
 
   &::before,
   &::after {
     content: "";
     flex: 1;
     height: 1px;
-    background: var(--cr-border, #e2e8f0);
+    background: var(--cr-border, var(--color-border));
   }
 }

@@ -14,7 +14,6 @@ chat-app {
   --input-border:            var(--color-input-border);
   --btn-primary-bg:          var(--color-primary);
   --btn-primary-hover:       var(--color-primary-hover);
-  --btn-primary-text:        #ffffff;
   --btn-dark-bg:             var(--color-btn-dark-bg);
   --btn-dark-hover:          var(--color-btn-dark-hover);
   --btn-dark-text:           var(--color-btn-dark-text);
@@ -310,8 +309,8 @@ chat-app {
     min-width: 1.25rem;
     height: 1.25rem;
     border-radius: 999px;
-    background: #ef4444;
-    color: #fff;
+    background: var(--color-status-error-border);
+    color: var(--color-text-inverse);
     font-size: 0.7rem;
     line-height: 1.25rem;
     text-align: center;
@@ -362,7 +361,7 @@ chat-app {
 
     &--join {
       background: var(--btn-primary-bg);
-      color: var(--btn-primary-text);
+      color: var(--color-text-inverse);
       padding: 0.35rem 0.9rem;
       font-size: 0.8rem;
       border-radius: 4px;
@@ -373,14 +372,14 @@ chat-app {
 
     &--delete {
       background: transparent;
-      color: #ef4444;
-      border: 1px solid #ef4444;
+      color: var(--color-status-error-border);
+      border: 1px solid var(--color-status-error-border);
       padding: 0.35rem 0.9rem;
       font-size: 0.8rem;
       border-radius: 4px;
       margin-left: 0.35rem;
       &:hover {
-        background: #fee2e2;
+        background: var(--color-status-error-bg);
       }
 
       &-sm {
@@ -398,7 +397,7 @@ chat-app {
   }
 
   &__error {
-    color: #ef4444;
+    color: var(--color-status-error-border);
     font-size: 0.85rem;
     margin-top: 0.25rem;
   }

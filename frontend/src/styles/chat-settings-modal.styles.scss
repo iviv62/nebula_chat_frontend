@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--color-overlay);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -10,29 +10,14 @@
   animation: fadeIn 0.15s ease;
 }
 
-.modal-theme--light {
-  --modal-bg: #ffffff;
-  --modal-text: #1e293b;
-  --modal-border: rgba(148, 163, 184, 0.4);
-  --modal-button-bg: #f1f5f9;
-  --modal-close-color: #64748b;
-}
-
-.modal-theme--dark {
-  --modal-bg: #1e293b;
-  --modal-text: #f8fafc;
-  --modal-border: #334155;
-  --modal-button-bg: #0f172a;
-  --modal-close-color: #94a3b8;
-}
 
 .modal {
-  background: var(--modal-bg);
-  color: var(--modal-text);
+  background: var(--color-surface);
+  color: var(--color-text);
   width: 90%;
   max-width: 400px;
   border-radius: 12px;
-  border: 1px solid var(--modal-border);
+  border: 1px solid var(--color-border);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
   overflow: hidden;
   display: flex;
@@ -41,7 +26,7 @@
 
 .header {
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--modal-border);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -55,7 +40,7 @@
 .close-btn {
   background: transparent;
   border: none;
-  color: var(--modal-close-color);
+  color: var(--color-text-muted);
   font-size: 1.5rem;
   cursor: pointer;
   line-height: 1;
@@ -66,7 +51,7 @@
 }
 
 .close-btn:hover {
-  color: var(--modal-text);
+  color: var(--color-text);
 }
 
 .body {
@@ -90,8 +75,8 @@
 .setting-control select,
 .setting-control button {
   padding: 0.5rem 1rem;
-  background: var(--modal-button-bg);
-  border: 1px solid var(--modal-border);
+  background: var(--color-surface-offset);
+  border: 1px solid var(--color-border);
   color: inherit;
   border-radius: 6px;
   font-size: 0.95rem;
@@ -116,7 +101,7 @@
 }
 
 .diagnostics-result-box {
-  background: rgba(0, 0, 0, 0.1);
+  background: var(--color-surface-scrim);
   padding: 10px;
   border-radius: 8px;
   width: 100%;
@@ -125,13 +110,13 @@
 }
 
 .diagnostics-success-title {
-  color: #10b981;
+  color: var(--color-status-online);
   font-weight: bold;
   margin-bottom: 8px;
 }
 
 .diagnostics-error-title {
-  color: #ef4444;
+  color: var(--color-status-error-border);
   font-weight: bold;
   margin-bottom: 8px;
 }

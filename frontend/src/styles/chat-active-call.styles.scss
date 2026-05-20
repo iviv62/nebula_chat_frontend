@@ -190,7 +190,7 @@
   justify-content: center;
   font-size: 2.5rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--color-text-inverse);
 }
 
 .active-call__card-controls {
@@ -273,11 +273,11 @@
 
   &--end {
     background: var(--color-status-error-solid);
-    color: #ffffff;
+    color: var(--color-text-inverse);
 
     &:hover {
       background: var(--color-status-error-solid-hover);
-      color: #ffffff;
+      color: var(--color-text-inverse);
     }
   }
 }

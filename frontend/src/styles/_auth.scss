@@ -1,0 +1,129 @@
+// _auth.scss
+// Shared authentication page styles. Uses global tokens from _tokens.scss.
+// Toggling themes switches variables automatically, so no dark theme overrides are needed.
+
+:host {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100svh;
+  width: 100%;
+}
+
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 1rem;
+}
+
+.auth-card {
+  background: var(--color-surface);
+  border-radius: 12px;
+  box-shadow:
+    0 4px 6px -1px var(--color-shadow),
+    0 2px 4px -1px var(--color-shadow);
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 400px;
+}
+
+h2 {
+  margin: 0 0 0.5rem 0;
+  color: var(--color-text);
+  font-size: 1.75rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.subtitle {
+  margin: 0 0 1.5rem 0;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.error {
+  color: var(--color-status-error-text);
+  background: var(--color-status-error-bg);
+  border: 1px solid var(--color-status-error-border);
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+input {
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 1px solid var(--color-input-border);
+  border-radius: 6px;
+  background: var(--color-input-bg);
+  color: var(--color-text);
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+  outline: none;
+}
+
+input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-glow);
+}
+
+input::placeholder {
+  color: var(--color-text-muted);
+}
+
+button {
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text-inverse);
+  background: var(--color-primary);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 0.5rem;
+}
+
+button:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+button:disabled {
+  background: var(--color-primary-disabled);
+  color: var(--color-primary-disabled-text);
+  cursor: not-allowed;
+}
+
+.links {
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.links a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.links a:hover {
+  text-decoration: underline;
+}

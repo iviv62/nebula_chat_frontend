@@ -36,8 +36,8 @@
   margin-bottom: 2rem;
 
   .logo-icon {
-    color: #3b82f6;
-    background: rgba(59, 130, 246, 0.1);
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
     border-radius: 50%;
     width: 40px;
     height: 40px;
@@ -145,7 +145,7 @@
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: #10b981;
+      background: var(--color-status-online);
       margin-left: auto;
     }
 
@@ -282,9 +282,9 @@
         right: -2px;
         width: 8px;
         height: 8px;
-        background: #ef4444;
+        background: var(--color-status-error-border);
         border-radius: 50%;
-        border: 2px solid #0a0c14;
+        border: 2px solid var(--color-space-bg);
       }
     }
 
@@ -345,8 +345,8 @@
     gap: 1rem;
 
     .btn-primary {
-      background: #3b82f6;
-      color: #ffffff;
+      background: var(--color-primary);
+      color: var(--color-text-inverse);
       border: none;
       padding: 0.75rem 1.25rem;
       border-radius: 8px;
@@ -359,7 +359,7 @@
       transition: background 0.2s;
 
       &:hover {
-        background: #2563eb;
+        background: var(--color-primary-hover);
       }
     }
 
@@ -398,7 +398,7 @@
   }
 
   .view-all {
-    color: #3b82f6;
+    color: var(--color-primary);
     text-decoration: none;
     font-size: 0.9rem;
     font-weight: 500;
@@ -449,7 +449,7 @@
         width: 40px;
         height: 40px;
         border-radius: 8px;
-        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-purple) 100%);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -478,15 +478,15 @@
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background: #10b981;
+            background: var(--color-status-online);
           }
         }
       }
     }
 
     .notification-badge {
-      background: #3b82f6;
-      color: #ffffff;
+      background: var(--color-primary);
+      color: var(--color-text-inverse);
       font-size: 0.75rem;
       padding: 0.15rem 0.5rem;
       border-radius: 12px;
@@ -506,8 +506,8 @@
       transition: all 0.2s ease;
       
       &:hover {
-        color: #ef4444;
-        background: rgba(239, 68, 68, 0.1);
+        color: var(--color-status-error-border);
+        background: color-mix(in srgb, var(--color-status-error-border) 10%, transparent);
       }
     }
   }
@@ -595,9 +595,9 @@
     }
 
     &.active {
-      background: #3b82f6;
-      color: #ffffff;
-      border-color: #3b82f6;
+      background: var(--color-primary);
+      color: var(--color-text-inverse);
+      border-color: var(--color-primary);
       box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
     }
   }
@@ -633,7 +633,7 @@
 
       .tag {
         background: rgba(0, 0, 0, 0.6);
-        color: #ffffff;
+        color: var(--color-text-inverse);
         font-size: 0.65rem;
         padding: 0.2rem 0.5rem;
         border-radius: 4px;
@@ -782,7 +782,7 @@
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: #10b981;
+    background: var(--color-status-online);
   }
 
   .activity-list {
@@ -804,11 +804,11 @@
       width: 7px;
       height: 7px;
       border-radius: 50%;
-      background: #475569;
+      background: var(--color-text-muted);
     }
 
     &.active::before {
-      background: #3b82f6;
+      background: var(--color-primary);
     }
 
     .activity-context {
