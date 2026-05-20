@@ -195,7 +195,7 @@ export class NebulaActiveServers extends LitElement {
           <h3>Your Active Servers</h3>
           <div class="section-header-actions" style="display: flex; gap: 1rem; align-items: center;">
             ${this.isLoading ? html`<span class="loading-indicator" style="font-size: 0.85rem; color: var(--color-text-muted);">Loading...</span>` : ""}
-            ${this.error ? html`<span class="error-msg" style="font-size: 0.85rem; color: #ef4444;">${this.error}</span>` : ""}
+            ${this.error ? html`<span class="error-msg" style="font-size: 0.85rem; color: var(--color-status-error-text);">${this.error}</span>` : ""}
           </div>
         </div>
 

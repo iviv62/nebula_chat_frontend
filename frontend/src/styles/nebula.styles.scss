@@ -1,4 +1,5 @@
 :root {
+  // Intentionally kept local here because it has local dark/light overrides defined within this file
   --neb-space-bg: #f8fafc;
 }
 
@@ -12,7 +13,6 @@
     --neb-space-bg: #030712;
   }
 }
-
 
 .nebula-layout {
   display: grid;
@@ -887,7 +887,7 @@
 .nebula {
   position: absolute;
   border-radius: 50%;
-  filter: blur(100px);
+  filter: blur(var(--color-nebula-blur));
   mix-blend-mode: multiply;
   pointer-events: none;
   z-index: 0;

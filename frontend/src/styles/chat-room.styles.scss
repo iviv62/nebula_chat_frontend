@@ -833,7 +833,7 @@
   .nebula {
     position: absolute;
     border-radius: 50%;
-    filter: blur(100px);
+    filter: blur(var(--color-nebula-blur));
     mix-blend-mode: normal;
     pointer-events: none;
     z-index: 0;
