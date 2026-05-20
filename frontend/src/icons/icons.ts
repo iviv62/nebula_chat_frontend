@@ -1,4 +1,5 @@
 import { html } from "lit";
+import type { TemplateResult } from "lit";
 
 export const nebulaIcons = {
   cloudLogo: html`<svg
@@ -272,3 +273,26 @@ export const nebulaIcons = {
     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
   </svg>`,
 };
+
+/**
+ * Star icon — exported as a function because the fill attribute is dynamic
+ * (filled vs outline). Reusable wherever a star/favourite UI is needed
+ * (e.g. starred messages, rooms, articles).
+ */
+export const iconStar = (filled: boolean): TemplateResult => html`
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="${filled ? "currentColor" : "none"}"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <polygon
+      points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+    ></polygon>
+  </svg>
+`;
