@@ -1,0 +1,66 @@
+// Styles for nebula-article-card and the popular-articles section.
+// The .trending-card and .trending-grid base rules live in nebula.styles.scss;
+// only article-card–specific overrides and new rules are defined here.
+
+.article-card {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    border-color: var(--color-input-border);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px -10px color-mix(in srgb, black 25%, transparent);
+  }
+
+  // No banner-icon offset needed — articles use the full banner as cover.
+  .card-body {
+    padding-top: 1.25rem;
+  }
+}
+
+// Author metadata row
+.article-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+
+.author-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+// Star button
+.btn-star {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+
+  svg {
+    flex-shrink: 0;
+    transition: fill 0.2s ease;
+  }
+
+  &:hover {
+    border-color: #f5c518;
+    color: #f5c518;
+  }
+
+  &.starred {
+    border-color: #f5c518;
+    color: #f5c518;
+    background: color-mix(in srgb, #f5c518 10%, transparent);
+  }
+}
